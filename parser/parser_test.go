@@ -10,9 +10,10 @@ import (
 	"unicode/utf8"
 )
 
-//Set testonly to a test number to only test that example.
+// Set testonly to a test number to only test that example.
 var testonly int = -1
 
+// Load a test file
 func Load(filename string) (string, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -21,10 +22,12 @@ func Load(filename string) (string, error) {
 	return string(data), nil
 }
 
+// Save a test result
 func Save(filename string, data []byte) {
 	ioutil.WriteFile(filename, data, os.ModePerm)
 }
 
+// RenderJade shortcut function.
 func renderJade(buf *bytes.Buffer, template string, data map[string]interface{}) *EvalJade {
 	eval := NewEvalJade(buf)
 	eval.SetData(data)
@@ -32,6 +35,7 @@ func renderJade(buf *bytes.Buffer, template string, data map[string]interface{})
 	return eval
 }
 
+// Render Jade file found on jade-lang home page.
 func _TestParseJade(t *testing.T) {
 	template, err := Load("../res/test.jade")
 	if err != nil {
@@ -46,6 +50,7 @@ func _TestParseJade(t *testing.T) {
 	fmt.Println(result.Root)
 }
 
+// Test parsing and evaluating jade.
 func TestEvalJade(t *testing.T) {
 	template, err := Load("../res/test.jade")
 	if err != nil {
@@ -61,6 +66,7 @@ func TestEvalJade(t *testing.T) {
 	//fmt.Println(buf.String())
 }
 
+// Test parsing jade extends functions.
 func TestParseExtends(t *testing.T) {
 	template, err := Load("../res/extends/index.jade")
 	if err != nil {
@@ -72,12 +78,14 @@ func TestParseExtends(t *testing.T) {
 
 }
 
+// store jade and html result for comparison.
 type verifyItem struct {
 	name string
 	jade string
 	html string
 }
 
+// Test Samples in file delimited by @jade, @html keywords. see 'verifyjade.jade' for example.
 func TestVerifyJade(t *testing.T) {
 	data := map[string]interface{}{
 		"pageTitle":       "Hello Jade",
@@ -111,6 +119,7 @@ func TestVerifyJade(t *testing.T) {
 	}
 }
 
+// evaluate jade
 func evaltest(t *testing.T, i int, item *verifyItem, data map[string]interface{}) {
 	buf := new(bytes.Buffer)
 	t.Logf("Testing %v. %s", i, item.name)
