@@ -99,11 +99,11 @@ Some Functions already included is:
 
 Render a file
 
-'''golang
-   import "gojade"
-   .
-   .
-   .
-   data := map[string]interface{}{"name":"ben"}
-   gojade.RenderFile("index.jade",data)
-'''
+```golang
+import "gojade"
+.
+.
+.
+data := map[string]interface{}{"name":"ben"}
+gojade.RenderFile("index.jade",data)
+```
