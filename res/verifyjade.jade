@@ -1,0 +1,638 @@
+@jade
+@html
+@end
+
+Basic html testing
+********************
+@jade
+p paragraph 1 test
+p paragraph 2 test
+@end
+
+@html
+<p>paragraph 1 test</p><p>paragraph 2 test</p>
+@end
+
+//*********************
+//Attributes
+//*********************
+
+@jade Attributes
+a(href='google.com') Google
+a(class='button', href='google.com') Google
+@html
+<a href="google.com">Google</a><a class="button" href="google.com">Google</a>
+@end
+
+@jade Attributes with condition
+- var authenticated = true
+body(class=authenticated ? 'authed' : 'anon')
+@html
+<body class="authed"></body>
+@end
+
+@jade Multiline attributes
+input(
+  type='checkbox'
+  name='agreement'
+  checked
+)
+@html
+<input type="checkbox" name="agreement" checked="checked"/>
+@end
+
+//Unescaped Attributes
+
+@jade Unescaped Attributes
+div(escaped="<code>")
+div(unescaped!="<code>")
+@html
+<div escaped="&lt;code&gt;"></div><div unescaped="<code>"></div>
+@end
+
+//Boolean Attributes
+
+@jade Boolean Attributes in doctype html
+doctype html
+input(type='checkbox', checked)
+input(type='checkbox', checked=true)
+input(type='checkbox', checked=false)
+input(type='checkbox', checked=true ? 'checked')
+@html
+<!DOCTYPE html><input type="checkbox" checked><input type="checkbox" checked><input type="checkbox"><input type="checkbox" checked="checked">
+@end
+
+@jade Boolean Attributes standard
+input(type='checkbox', checked)
+input(type='checkbox', checked=true)
+input(type='checkbox', checked=false)
+input(type='checkbox', checked='true')
+@html
+<input type="checkbox" checked="checked"/><input type="checkbox" checked="checked"/><input type="checkbox"/><input type="checkbox" checked="true"/>
+@end
+
+//Style Attributes
+
+@jade style attributes
+a(style={color: 'red', background: 'green'})
+@html
+<a style="color:red;background:green"></a>
+@end
+
+//Class Attributes
+
+@jade class attributes
+- var classes = ['foo', 'bar', 'baz']
+a(class=classes)
+//- the class attribute may also be repeated to merge arrays
+a.bing(class=classes class=['bing'])
+@html
+<a class="foo bar baz"></a><a class="bing foo bar baz bing"></a>
+@end
+
+//Class Literal
+
+@jade Class Literal
+a.button
+.content
+@html
+<a class="button"></a><div class="content"></div>
+@end
+
+//ID Literal
+
+@jade ID Literal
+a#main-link
+#content
+@html
+<a id="main-link"></a><div id="content"></div>
+@end
+
+//&attributes
+
+@jade &attributes
+div#foo(data-bar="foo")&attributes({'data-foo': 'bar'})
+- var attributes = {'data-foo': 'bar'};
+div#foo(data-bar="foo")&attributes(attributes)
+@html
+<div id="foo" data-bar="foo" data-foo="bar"></div><div id="foo" data-bar="foo" data-foo="bar"></div>
+@end
+
+//Other Attribute Tests
+
+@jade General Attribute Tests
+@html
+@end
+
+
+//*********************
+//Case
+//*********************
+
+@jade Case
+- var friends = 10
+case friends
+  when 0
+    p you have no friends
+  when 1
+    p you have a friend
+  default
+    p you have #{friends} friends
+@html
+<p>you have 10 friends</p>
+@end
+
+//Case Fall Through
+
+@jade Case Fall Through
+- var friends = 0
+case friends
+  when 0
+  when 1
+    p you have very few friends
+  default
+    p you have #{friends} friends
+@html
+<p>you have very few friends</p>
+@end
+
+//Block Expansion
+
+@jade Case Block Expansion
+- var friends = 1
+case friends
+  when 0: p you have no friends
+  when 1: p you have a friend
+  default: p you have #{friends} friends
+@html
+<p>you have a friend</p>
+@end
+
+//*********************
+//Code
+//*********************
+
+// Unbuffered Code
+
+//- @jade javascript unbuffered code. Example Not Supported
+//- - for (var x = 0; x < 3; x++)
+//-   li item
+//- @html
+//- <li>item</li>
+//- <li>item</li>
+//- <li>item</li>
+//- @end
+
+//Buffered Code
+
+@jade Buffered Code
+p
+  = 'This code is <escaped>!'
+p= 'This code is' + ' <escaped>!'
+@html
+<p>This code is &lt;escaped&gt;!</p><p>This code is &lt;escaped&gt;!</p>
+@end
+
+//Unescaped Buffered Code
+
+@jade Unescaped Buffered Code
+p
+  != 'This code is <strong>not</strong> escaped!'
+p!= 'This code is <strong>not</strong> escaped!'
+@html
+<p>This code is <strong>not</strong> escaped!</p><p>This code is <strong>not</strong> escaped!</p>
+@end
+
+//*********************
+//Comments
+//*********************
+
+@jade comments
+// just some paragraphs
+p foo
+p bar
+@html
+<!-- just some paragraphs--><p>foo</p><p>bar</p>
+@end
+
+@jade unbuffered comments
+//- will not output within markup
+p foo
+p bar
+@html
+<p>foo</p><p>bar</p>
+@end
+
+//Block Comments
+
+@jade Block Comments
+body
+  //
+    As much text as you want
+    can go here.
+@html
+<body><!--As much text as you want
+can go here.--></body>
+@end
+
+//Conditional Comments
+
+@jade Conditional Comments
+<!--[if IE 8]>
+<html lang="en" class="lt-ie9">
+<![endif]-->
+<!--[if gt IE 8]><!-->
+<html lang="en">
+<!--<![endif]-->
+@html
+<!--[if IE 8]><html lang="en" class="lt-ie9"><![endif]--><!--[if gt IE 8]><!--><html lang="en"><!--<![endif]-->
+@end
+
+//*********************
+//Conditionals
+//*********************
+
+@jade Conditionals condition 1
+- var user = { description: 'foo bar baz' }
+- var authorised = false
+#user
+  if user.description
+    h2 Description
+    p.description= user.description
+  else if authorised
+    h2 Description
+    p.description.
+      User has no description,
+      why not add one...
+  else
+    h1 Description
+    p.description User has no description
+@html
+<div id="user"><h2>Description</h2><p class="description">foo bar baz</p></div>
+@end
+
+@jade Conditionals condition 2
+- var user = { name:"ben" }
+- var authorised = false
+#user
+  if user.description
+    h2 Description
+    p.description= user.description
+  else if authorised
+    h2 Description
+    p.description.
+      User has no description,
+      why not add one...
+  else
+    h1 Description
+    p.description User has no description
+@html
+<div id="user"><h1>Description</h1><p class="description">User has no description</p></div>
+@end
+
+
+@jade Conditionals condition 3
+- var user = { name:"ben" }
+- var authorised = true
+#user
+  if user.description
+    h2 Description
+    p.description= user.description
+  else if authorised
+    h2 Description
+    p.description.
+      User has no description,
+      why not add one...
+  else
+    h1 Description
+    p.description User has no description
+@html
+<div id="user"><h2>Description</h2><p class="description">User has no description,
+why not add one...</p></div>
+@end
+
+
+@jade Conditionals condition 4
+- var authorised = false
+#user
+  if user.description
+    h2 Description
+    p.description= user.description
+  else if authorised
+    h2 Description
+    p.description.
+      User has no description,
+      why not add one...
+  else
+    h1 Description
+    p.description User has no description
+@html
+<div id="user"><h1>Description</h1><p class="description">User has no description</p></div>
+@end
+
+
+
+@jade unless
+- var user = { name:"ben", isAnonymous:false }
+unless user.isAnonymous
+  p You're logged in as #{user.name}
+@html
+<p>You're logged in as ben</p>
+@end
+
+//*********************
+//doctype
+//*********************
+
+@jade doctype
+doctype html
+doctype xml
+doctype transitional
+doctype strict
+doctype frameset
+doctype 1.1
+doctype basic
+doctype mobile
+@html
+<!DOCTYPE html><?xml version="1.0" encoding="utf-8" ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd"><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN" "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd"><!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.2//EN" "http://www.openmobilealliance.org/tech/DTD/xhtml-mobile12.dtd">
+@end
+
+//custom doctype - Not Supported
+
+//doctype option
+
+//*********************
+//extends
+//*********************
+
+@jade
+@html
+@end
+
+//*********************
+//filters
+//*********************
+
+@jade
+@html
+@end
+
+//*********************
+//includes
+//*********************
+
+@jade
+@html
+@end
+
+//*********************
+//inheritance
+//*********************
+
+@jade
+@html
+@end
+
+//*********************
+//Interpolation
+//*********************
+
+@jade String Interpolation, Escaped 1
+- var title = "On Dogs: Man's Best Friend";
+- var author = "enlore";
+- var theGreat = "<span>escape!</span>";
+
+h1= title
+p Written with love by #{author}
+p This will be safe: #{theGreat}
+@html
+<h1>On Dogs: Man&#39;s Best Friend</h1><p>Written with love by enlore</p><p>This will be safe: &lt;span&gt;escape!&lt;/span&gt;</p>
+@end
+
+@jade String Interpolation, Escaped 2
+- var msg = "not my inside voice";
+p This is #{upper(msg)}
+@html
+<p>This is NOT MY INSIDE VOICE</p>
+@end
+
+@jade String Interpolation, Unescaped
+- var riskyBusiness = "<em>Some of the girls are wearing my mother's clothing.</em>";
+.quote
+  p Joel: !{riskyBusiness}
+@html
+<div class="quote"><p>Joel: <em>Some of the girls are wearing my mother's clothing.</em></p></div>
+@end
+
+@jade Inline Jade
+p.
+  If you take a look at this page's source #[a(target="_blank", href="https://github.com/jadejs/jade/blob/master/docs/views/reference/interpolation.jade") on GitHub],
+  you'll see several places where the tag interpolation operator is
+  used, like so.
+@html
+<p>If you take a look at this page's source <a target="_blank" href="https://github.com/jadejs/jade/blob/master/docs/views/reference/interpolation.jade">on GitHub</a>,
+  you'll see several places where the tag interpolation operator is
+  used, like so.
+</p>
+@end
+
+
+//*********************
+//iteration
+//*********************
+
+@jade each
+ul
+  each val, index in [1,2,3,4,5]
+    li=val
+@html
+<ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li></ul>
+@end
+
+@jade each counting from 0 to 5
+ul
+  each val in 5
+    li=val+1      
+@html
+<ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li></ul>
+@end
+
+@jade each with index
+ul
+  each val, index in ['zero', 'one', 'two']
+    li= index + ': ' + val
+@html
+<ul><li>0: zero</li><li>1: one</li><li>2: two</li></ul>
+@end
+
+@jade each json
+ul
+  each val, index in {1:'one',2:'two',3:'three'}
+    li= index + ': ' + val
+@html
+<ul><li>1: one</li><li>2: two</li><li>3: three</li></ul>
+@end
+
+@jade each condition
+- var values = [];
+ul
+  each val in values ? values : ['There are no values']
+    li= val
+@html
+<ul><li>There are no values</li></ul>
+@end
+
+//- @jade while
+//- - var n = 0
+//- ul
+//-   while n < 4
+//-     li= n++
+//- @html
+//- <ul><li>0</li><li>1</li><li>2</li><li>3</li>
+//- </ul>
+//- @end
+
+//*********************
+//mixins
+//*********************
+
+@jade mixins
+//- Declaration
+mixin list
+  ul
+    li foo
+    li bar
+    li baz
+//- Use
++list
++list
+@html
+<ul><li>foo</li><li>bar</li><li>baz</li></ul><ul><li>foo</li><li>bar</li><li>baz</li></ul>
+@end
+
+@jade mixin parameters
+mixin pet(name)
+  li.pet= name
+ul
+  +pet('cat')
+  +pet('dog')
+  +pet('pig')
+@html
+<ul><li class="pet">cat</li><li class="pet">dog</li><li class="pet">pig</li></ul>
+@end
+
+@jade mixin block
+mixin article(title)
+  .article
+    .article-wrapper
+      h1= title
+      if block
+        block
+      else
+        p No content provided
+
++article('Hello world')
+
++article('Hello world')
+  p This is my
+  p Amazing article
+@html
+<div class="article"><div class="article-wrapper"><h1>Hello world</h1><p>No content provided</p></div></div><div class="article"><div class="article-wrapper"><h1>Hello world</h1><p>This is my</p><p>Amazing article</p></div></div>
+@end
+
+@jade mixin Attributes 1
+mixin link(href, name)
+  //- attributes == {class: "btn"}
+  a(class!=attributes.class, href=href)= name
+
++link('/foo', 'foo')(class="btn")
+@html
+<a class="btn" href="/foo">foo</a>
+@end
+
+@jade mixin Attributes 2
+mixin link(href, name)
+  a(href=href)&attributes(attributes)= name
+
++link('/foo', 'foo')(class="btn")
+@html
+<a href="/foo" class="btn">foo</a>
+@end
+
+
+@jade mixin Rest Arguments
+div Not Implemented
+@html
+<div>Not Implemented</div>
+@end
+
+
+//*********************
+//plaint text
+//*********************
+
+//Piped Text
+
+@jade Piped Text
+| Plain text can include <strong>html</strong>
+p
+  |It must always be on its own line
+@html
+ Plain text can include <strong>html</strong><p>It must always be on its own line</p>
+@end
+
+//Inline in a Tag
+
+@jade Inline in a Tag
+p Plain text can include <strong>html</strong>
+@html
+<p>Plain text can include <strong>html</strong></p>
+@end
+
+//Block in a Tag
+
+@jade Block in a Tag
+script.
+  if (usingJade)
+    console.log('you are awesome')
+  else
+    console.log('use jade')
+@html
+<script>if (usingJade)
+  console.log('you are awesome')
+else
+  console.log('use jade')</script>
+@end
+
+
+//*********************
+//tags
+//*********************
+
+@jade tags
+ul
+  li Item A
+  li Item B
+  li Item C
+@html
+<ul><li>Item A</li><li>Item B</li><li>Item C</li></ul>
+@end
+
+@jade tags 2
+img
+@html
+<img/>
+@end
+
+@jade Block Expansion
+a: img
+@html
+<a><img/></a>
+@end
+
+@jade Self Closing Tags
+foo/
+foo(bar='baz')/
+@html
+<foo/><foo bar="baz"/>
+@end

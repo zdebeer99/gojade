@@ -1,0 +1,39 @@
+= 1*2+3
+= x
+= x * y
+div= 1+1+1+1+1+1
+if youAreUsingJade
+  p Hello, I am using jade
+else
+  p Error, if you see this
+if true && true && true
+  p Working
+else
+  p Error
+if false || true || false
+  p working
+else
+  p Error
+if 2==1+1 && 5<2*5
+  p working
+else
+  p Error
+unless false
+  p Working
+else
+  p Error
+div#someid.class1.class2.class3(class="class4")
+//This is a Comment
+//- Error
+div.class1(attr="some attribute")
+  // This comment are within a div
+  p We are expecting comment before this paragraph
+script(src="some/file/path")/
+div
+  //another Comment
+div//
+  this is a comment block
+  spanning over
+  3 lines
+div: p Block Expansion
+div After Block Expansion

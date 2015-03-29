@@ -1,0 +1,10 @@
+extends ./layout.jade
+
+block scripts
+  script(src='/jquery.js')
+  script(src='/pets.js')
+
+block content
+  h1= title
+  each pet in pets
+    div= pet
