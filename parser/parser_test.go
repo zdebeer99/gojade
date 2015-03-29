@@ -25,6 +25,13 @@ func Save(filename string, data []byte) {
 	ioutil.WriteFile(filename, data, os.ModePerm)
 }
 
+func renderJade(buf *bytes.Buffer, template string, data map[string]interface{}) *EvalJade {
+	eval := NewEvalJade(buf)
+	eval.SetData(data)
+	eval.RenderString(template)
+	return eval
+}
+
 func _TestParseJade(t *testing.T) {
 	template, err := Load("../res/test.jade")
 	if err != nil {
