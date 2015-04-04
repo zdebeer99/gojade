@@ -102,7 +102,7 @@ func (this *parser) parseAndAttribute() {
 		if expr != nil {
 			fn := NewFuncToken(attributesFunc)
 			fn.AddArgument(expr)
-			tag.AddAttribute(NewTreeNode(fn))
+			tag.AddAttribute(this.newNode(fn))
 		}
 	}
 	for {
@@ -136,7 +136,7 @@ attributes:
 	for {
 		if this.scanHtmlWord() {
 			if mode == 1 {
-				tag.AddAttribute(NewTreeNode(NewTextToken(word)))
+				tag.AddAttribute(this.newNode(NewTextToken(word)))
 			}
 			word = this.commit()
 			mode = 1
@@ -157,7 +157,7 @@ attributes:
 		case ')':
 			this.ignore()
 			if mode == 1 {
-				tag.AddAttribute(NewTreeNode(NewTextToken(word)))
+				tag.AddAttribute(this.newNode(NewTextToken(word)))
 			}
 			mode = 0
 			word = ""
@@ -168,7 +168,7 @@ attributes:
 		case ',':
 			this.ignore()
 			if mode == 1 {
-				tag.AddAttribute(NewTreeNode(NewTextToken(word)))
+				tag.AddAttribute(this.newNode(NewTextToken(word)))
 			}
 			mode = 0
 			word = ""
@@ -179,9 +179,9 @@ attributes:
 			fnescapeHtml.AddArgument(this.parseExpression())
 			switch mode {
 			case 0:
-				tag.AddAttribute(NewTreeNode(fnescapeHtml))
+				tag.AddAttribute(this.newNode(fnescapeHtml))
 			case 1:
-				tag.AddKeyValue(word, NewTreeNode(fnescapeHtml))
+				tag.AddKeyValue(word, this.newNode(fnescapeHtml))
 			}
 			mode = 0
 			continue attributes
@@ -299,7 +299,7 @@ func (this *parser) parseKeyword(keyword string) stateFn {
 				fnkeywork.AddArgument(this.parseExpression())
 			} else {
 				this.scan.Backup()
-				fnkeywork.AddArgument(NewTreeNode(NewEmptyToken()))
+				fnkeywork.AddArgument(this.newNode(NewEmptyToken()))
 			}
 			instatement := this.parseExpression()
 			if fnin, ok := instatement.Value.(*FuncToken); ok && fnin.Name == "in" {
@@ -341,7 +341,7 @@ func (this *parser) parseHtmlTagClass() stateFn {
 		this.error("Expecting a Html Tag before the . operator. Current Tag: %s", this.curr.String())
 	}
 	if this.scanHtmlWord() {
-		tag.SetClass(NewTreeNode(NewTextToken(scan.Commit())))
+		tag.SetClass(this.newNode(NewTextToken(scan.Commit())))
 		return branchAfterHtmlTag
 	}
 	this.error("Unexpected char, expecting a word after #.")
@@ -356,7 +356,7 @@ func (this *parser) parseHtmlTagId() stateFn {
 	}
 	scan.Ignore()
 	if this.scanHtmlWord() {
-		tag.AddKeyValue("id", NewTreeNode(NewTextToken(scan.Commit())))
+		tag.AddKeyValue("id", this.newNode(NewTextToken(scan.Commit())))
 		return branchAfterHtmlTag
 	}
 	this.error("Unexpected char, expecting a word after #.")
@@ -381,7 +381,7 @@ func (this *parser) parseMultilineContent() {
 	scan.SetPosition(scan.StartPosition() + initlvl*this.indent.indentType)
 	scan.Ignore()
 	start := scan.Position()
-	node := NewTreeNode(NewEmptyToken())
+	node := this.newNode(NewEmptyToken())
 	cnt := 0
 	for {
 		cnt++
@@ -446,7 +446,7 @@ func (this *parser) parseMultilineContent() {
 
 func (this *parser) parseExpression() *TreeNode {
 	node := this.curr
-	this.curr = NewTreeNode(NewGroupToken(""))
+	this.curr = this.newNode(NewGroupToken(""))
 	state := branchExpressionValuePart
 	for state != nil {
 		state = state(this)
@@ -515,7 +515,7 @@ loop1:
 		if identity, ok := expr.Value.(*FuncToken); ok {
 			if identity.Name == "var" {
 				fn := NewFuncToken("var")
-				expr = NewTreeNode(fn)
+				expr = this.newNode(fn)
 				kv := this.parseExpression()
 				if innerfn, ok := kv.Value.(*OperatorToken); ok && innerfn.Operator == "=" {
 					if len(kv.items) == 2 {
@@ -641,7 +641,7 @@ func (this *parser) skipIndent(r rune) (int, error) {
 
 func (this *parser) getContent() *TreeNode {
 	var buf, code bytes.Buffer
-	var node = NewTreeNode(NewEmptyToken())
+	var node = this.newNode(NewEmptyToken())
 	var inCode, escape bool
 	for {
 		this.ignore()

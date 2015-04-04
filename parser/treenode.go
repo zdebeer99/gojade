@@ -9,11 +9,12 @@ type TreeNode struct {
 	Value  Token
 	parent *TreeNode
 	items  []*TreeNode
+	Pos    int
 }
 
 // NewTreeElement Creates a new TreeElement.
 func NewTreeNode(value Token) *TreeNode {
-	return &TreeNode{value, nil, make([]*TreeNode, 0)}
+	return &TreeNode{value, nil, make([]*TreeNode, 0), 0}
 }
 
 // Parent Returns the current element parent

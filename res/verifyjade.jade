@@ -636,3 +636,21 @@ foo(bar='baz')/
 @html
 <foo/><foo bar="baz"/>
 @end
+
+//*********************
+//Custom Tests
+//*********************
+
+@jade if condition test
+- var x = 3
+if x==3
+  p x is equal to 3
+else
+  p x is not equal to 3
+@html
+<p>x is equal to 3</p>
+@end
+
+@jade
+@html
+@end

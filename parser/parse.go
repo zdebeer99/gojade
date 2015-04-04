@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"github.com/zdebeer99/goexpression/scanner"
+	"github.com/zdebeer99/gojade/scanner"
 	"strconv"
 	"strings"
 )
@@ -59,6 +59,12 @@ func (this *parser) getCurr() Token {
 		return this.curr.Value
 	}
 	return nil
+}
+
+func (this *parser) newNode(value Token) *TreeNode {
+	node := NewTreeNode(value)
+	node.Pos = this.scan.Position()
+	return node
 }
 
 func (this *parser) add(token Token) *TreeNode {
@@ -247,7 +253,7 @@ loop:
 		if expr != nil {
 			ftoken.AddArgument(expr)
 		} else {
-			ftoken.AddArgument(NewTreeNode(NewEmptyToken()))
+			ftoken.AddArgument(this.newNode(NewEmptyToken()))
 		}
 
 		r := scan.Next()
@@ -372,7 +378,7 @@ func (this *parser) parseNot() stateFn {
 		this.add(fnnot)
 		//TODO Support brackets and functions
 		if this.scan.ScanWord() {
-			this.curr = NewTreeNode(NewGroupToken(""))
+			this.curr = this.newNode(NewGroupToken(""))
 			this.parseIdentity()
 			fnnot.AddArgument(this.curr)
 			this.curr = node
@@ -389,7 +395,7 @@ func (this *parser) parseArray() *TreeNode {
 		this.error("Expecting [ before array.")
 	}
 	curr := this.curr
-	group := NewTreeNode(NewGroupToken("[]"))
+	group := this.newNode(NewGroupToken("[]"))
 	this.curr = group
 loop1:
 	for {
@@ -427,7 +433,7 @@ func (this *parser) parseMap() *TreeNode {
 		this.error("Expecting { before map.")
 	}
 	curr := this.curr
-	group := NewTreeNode(NewGroupToken("{}"))
+	group := this.newNode(NewGroupToken("{}"))
 	this.curr = group
 loop1:
 	for {

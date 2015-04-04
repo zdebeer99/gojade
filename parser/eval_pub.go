@@ -8,7 +8,7 @@ import (
 type EvalJade struct {
 	data     dataMap
 	builtin  map[string]reflect.Value
-	extfunc  map[string]reflect.Value
+	Extfunc  map[string]reflect.Value
 	writer   *jadewriter
 	doctype  string
 	stack    *ContextStack
@@ -23,7 +23,7 @@ func NewEvalJade(wr io.Writer) *EvalJade {
 	eval := new(EvalJade)
 	eval.writer = &jadewriter{wr, eval, false}
 	eval.builtin = createValueFuncs(builtin)
-	eval.extfunc = make(map[string]reflect.Value)
+	eval.Extfunc = make(map[string]reflect.Value)
 	eval.registerStandardFunctions()
 	eval.stack = NewContextStack()
 	eval.Blocks = make(map[string]*TreeNode)
@@ -64,7 +64,7 @@ func (this *EvalJade) RegisterFunction(name string, fn interface{}) {
 	fnvalue := reflect.ValueOf(fn)
 	switch fnvalue.Kind() {
 	case reflect.Func:
-		this.extfunc[name] = fnvalue
+		this.Extfunc[name] = fnvalue
 	default:
 		panic("argument is not a function. " + fnvalue.String())
 	}

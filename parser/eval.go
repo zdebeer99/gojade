@@ -422,7 +422,7 @@ func (this *EvalJade) toCommonType(val1 interface{}) interface{} {
 func (this *EvalJade) findFunction(name string) reflect.Value {
 	fn, ok := this.builtin[name]
 	if !ok {
-		fn, ok = this.extfunc[name]
+		fn, ok = this.Extfunc[name]
 		if !ok {
 			panic(fmt.Errorf("Function %q not found.", name))
 		}
