@@ -14,7 +14,67 @@ all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is wor
 
 pull request and issues is welcomed.
 
+## Using GoJade
+
+**Installing gojade**
+
+```
+go get github.com/zdebeer99/gojade 
+```
+
+**Importing into your project**
+
+'''go
+import (
+  "github.com/zdebeer99/gojade"
+)
+'''
+
+**Basic Usage**
+
+```go
+import (
+  "github.com/zdebeer99/gojade"
+  "fmt"
+)
+
+func main(){
+  //GoJade can be declared globally. it will cache templates and keep config information for parsing.
+  jade:=gojade.NewGoJade()
+  jade.ViewPath = "./view"
+
+  //RenderFile renders a jade file into html.
+  fmt.Println(jade.RenderFile("index.jade", nil).String())
+}
+
+```
+
 ## Examples
+
+Jade Example:
+
+```jade
+doctype html
+html(lang="en")
+  head
+    title= pageTitle
+    script(type='text/javascript').
+      if (foo) {
+         bar(1 + 5)
+      }
+  body
+    h1 Jade - node template engine
+    #container.col
+      if youAreUsingJade
+        p You are amazing
+      else
+        p Get on it!
+      p.
+        Jade is a terse and simple
+        templating language with a
+        strong focus on performance
+        and powerful features.
+```
 
 gojade supports common math functions, boolean operators and string concatenation.
 
@@ -32,6 +92,8 @@ if x>=0 && x<10
 else 
   p x is equal or larger than 10
 ```
+
+
 
 ## Differences between jade and gojade
 
@@ -124,10 +186,6 @@ Some Functions already included is:
 * format(string,args...) - the same as fmt.SPrintf() in go
 
 * more is planned, suggestions is welcomed.
-
-## Using GoJade
-
-**Installing gojade**
 
 
 **Basic Usage**
