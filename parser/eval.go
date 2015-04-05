@@ -111,6 +111,12 @@ func (this *EvalJade) getGroup(node *TreeNode, group *GroupToken) interface{} {
 		}
 		return result
 	}
+	if group.GroupType == "()" {
+		if len(node.items) != 1 {
+			panic("Math Function Should have 1 operator in the tree")
+		}
+		return this.getValue(node.items[0])
+	}
 
 	result := make([]interface{}, len(node.items))
 	for i, item := range node.items {

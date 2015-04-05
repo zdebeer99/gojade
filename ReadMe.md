@@ -8,15 +8,32 @@ MIT License (MIT)
 
 Go jade is inspired by the javascript template library http://jade-lang.com/
 
-gojade renders a jade file directly to HTML, and does not compile to a gotemplate first.
+gojade renders a jade file directly to HTML, and does not compile to a gotemplate first. 
 
-While most of the Jade specifications is supported there is some jade features outstanding, see the status section for details.
+all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is working except for one or two. See status for more details.
 
 pull request and issues is welcomed.
 
+## Why GoJade
+
+gojade supports common math functions, binary operators and string concatenation as used in most languages.
+
+Examples:
+   -var x = 5
+   p Do some maths
+   p=x*2
+   p or show the answer inline #{x*2}
+   p More Maths
+   p=(x+3)*2
+   if x>=0 && x<10
+     p x is smaller than ten
+   else
+     p x is larger or equal to ten.
 
 
 ## Differences between jade and gojade
+
+all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is working except for one or two. See status for more details.
 
 **javascript**
 
@@ -50,6 +67,7 @@ use the ? conditional instead. Example:
     input(type='checkbox', checked=true ? 'checked')
 
 **Unbuffered Code**
+
 full javascript support for unbuffered code will not be supported as the template runs in go runtime.
 
 Special cases are:
