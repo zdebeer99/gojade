@@ -12,13 +12,13 @@ gojade renders a jade file directly to HTML, and does not compile to a gotemplat
 
 all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is working except for one or two. See status for more details.
 
-pull request and issues is welcomed.
+pull request is welcomed.
 
 ## Using GoJade
 
 **Installing gojade**
 
-```
+```bash
 go get github.com/zdebeer99/gojade 
 ```
 
@@ -49,7 +49,7 @@ func main(){
 
 ```
 
-## Examples
+## Jade Examples
 
 Jade Example:
 
@@ -76,9 +76,10 @@ html(lang="en")
         and powerful features.
 ```
 
-gojade supports common math functions, boolean operators and string concatenation.
+gojade supports math operators, operator precedence, boolean operators and string concatenation.
 
 Examples:
+
 ```jade
 // declare a variable called x
 -var x = 5
@@ -94,26 +95,35 @@ else
 ```
 
 
-
 ## Differences between jade and gojade
 
 all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is working except for one or two. See status for more details.
 
 **javascript**
 
-Keep in mind that gojade does not run in a javascript environment, nor is it executed in a javascript
-environment. Because of this javascript in gojade is not supported, a work around will be to register custom functions defined in go and calling these functions from your jade template.
+Keep in mind that gojade does not run in a javascript environment, because of this server side javascript in gojade is not supported as in jade, a work around will be to register custom functions defined in go and calling these functions from your jade template.
+
+Registering Custom Functions
+```go
+jade:=NewGoJade()
+// Register a function called hello, that can be used in your jade template
+jade.RegisterFunction("hello", func(name string){return "Hello"+name})
+```
+
+```jade
+p= hello("Ben")
+```
 
 **variable names**
 
 Variable names is case sensitive
 
-Only public fields can be accessed from a struct passed to the render function data argument.
+Only public fields can be accessed from a struct data argument.
 
 If a variable is not defined a warning will be Logged and nil is returned.
 
 nil will eval to false
-suggestion ? nil returns "" as a string.
+
 
 **doctype**
 
@@ -122,17 +132,20 @@ the doctype shortcut does not support custom doctypes.
 **Boolean Attribute**
 
 the Boolean Attribute
-
-    input(type='checkbox', checked=true && 'checked')
+```jade
+input(type='checkbox', checked=true && 'checked')
+```
 
 is not supported and no plans for support is currently in the pipeline, please log an issue if required.
 use the ? conditional instead. Example:
+```jade
+input(type='checkbox', checked=true ? 'checked')
+```
 
-    input(type='checkbox', checked=true ? 'checked')
 
 **Unbuffered Code**
 
-full javascript support for unbuffered code will not be supported as the template runs in go runtime.
+Full javascript support for unbuffered code will not be supported as the template runs in go runtime.
 
 Special cases are:
 
@@ -143,7 +156,7 @@ Defining a variable using var
 - var person = {name:"ben", age:5}
 ```
 
-[Planned] Calling Unbuffered Functions defined in your code.
+[Planned] Calling Unbuffered Functions defined in go.
 
 ```jade
 - SomeGoFunction(5,64)
