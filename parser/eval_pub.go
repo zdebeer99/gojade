@@ -6,7 +6,7 @@ import (
 )
 
 type EvalJade struct {
-	data     dataMap
+	data     reflect.Value
 	builtin  map[string]reflect.Value
 	Extfunc  map[string]reflect.Value
 	writer   *jadewriter
@@ -32,8 +32,8 @@ func NewEvalJade(wr io.Writer) *EvalJade {
 	return eval
 }
 
-func (this *EvalJade) SetData(data map[string]interface{}) {
-	this.data = data
+func (this *EvalJade) SetData(data interface{}) {
+	this.data = reflect.ValueOf(data)
 }
 
 func (this *EvalJade) SetViewPath(viewpath string) {

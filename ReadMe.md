@@ -1,16 +1,16 @@
 # Go Jade
 
-Version: 0.01 Alpha
+Version: 0.012 Alpha
 
-This library is under developement and changes can be expected.
+This library is under development and changes can be expected.
 
 MIT License (MIT)
 
 Go jade is inspired by the javascript template library http://jade-lang.com/
 
-gojade renders a jade file directly to html, and does not compile to a gotemplate first.
+gojade renders a jade file directly to HTML, and does not compile to a gotemplate first.
 
-While most of the Jade specifications is supported there is stil some jade features not yet fully supported, see the status section for information on this.
+While most of the Jade specifications is supported there is some jade features outstanding, see the status section for details.
 
 pull request and issues is welcomed.
 
@@ -20,8 +20,19 @@ pull request and issues is welcomed.
 
 **javascript**
 
-Keep in mind that gojade does not run in a javascript enviroment, nor is it executed in a javascript
-environment. Becuase of this javascript in gojade is not supported, a work around will be to register custom functions defined in go and calling these functions from your jade template.
+Keep in mind that gojade does not run in a javascript environment, nor is it executed in a javascript
+environment. Because of this javascript in gojade is not supported, a work around will be to register custom functions defined in go and calling these functions from your jade template.
+
+**variable names**
+
+Variable names is case sensitive
+
+Only public fields can be accessed from a struct passed to the render function data argument.
+
+If a variable is not defined a warning will be Logged and nil is returned.
+
+nil will eval to false
+suggestion ? nil returns "" as a string.
 
 **doctype**
 
@@ -46,7 +57,7 @@ Special cases are:
 Defining a variable using var
 
 	- var x = 5
-    - var person = {name:"ben", age:5}
+  - var person = {name:"ben", age:5}
 
 [Planned] Calling Unbuffered Functions defined in your code.
 

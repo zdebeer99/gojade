@@ -13,78 +13,6 @@ import (
 // Set testonly to a test number to only test that example.
 var testonly int = -1
 
-// Load a test file
-func Load(filename string) (string, error) {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
-}
-
-// Save a test result
-func Save(filename string, data []byte) {
-	ioutil.WriteFile(filename, data, os.ModePerm)
-}
-
-// RenderJade shortcut function.
-func renderJade(buf *bytes.Buffer, template string, data map[string]interface{}) *EvalJade {
-	eval := NewEvalJade(buf)
-	eval.SetData(data)
-	eval.RenderString(template)
-	return eval
-}
-
-// Render Jade file found on jade-lang home page.
-func _TestParseJade(t *testing.T) {
-	template, err := Load("../res/test.jade")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	result := Parse(template)
-	if result.Err != nil {
-		fmt.Println(result.Err)
-	}
-	//node := l.Parse()
-	fmt.Println(result.Root)
-}
-
-// Test parsing and evaluating jade.
-func TestEvalJade(t *testing.T) {
-	template, err := Load("../res/test.jade")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	buf := new(bytes.Buffer)
-	data := map[string]interface{}{
-		"pageTitle":       "Hello Jade",
-		"youAreUsingJade": true,
-	}
-	renderJade(buf, template, data)
-	//fmt.Println(buf.String())
-}
-
-// Test parsing jade extends functions.
-func TestParseExtends(t *testing.T) {
-	template, err := Load("../res/extends/index.jade")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	result := Parse(template)
-	fmt.Println(result.Root, result.Extends)
-
-}
-
-// store jade and html result for comparison.
-type verifyItem struct {
-	name string
-	jade string
-	html string
-}
-
 // Test Samples in file delimited by @jade, @html keywords. see 'verifyjade.jade' for example.
 func TestVerifyJade(t *testing.T) {
 	data := map[string]interface{}{
@@ -117,6 +45,95 @@ func TestVerifyJade(t *testing.T) {
 			}
 		}
 	}
+}
+
+// Render Jade file found on jade-lang home page.
+func TestParseJade(t *testing.T) {
+	template, err := Load("../res/test.jade")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	result := Parse(template)
+	if result.Err != nil {
+		fmt.Println(result.Err)
+	}
+	//fmt.Println(result.Root)
+}
+
+type testTemplateData struct {
+	PageTitle       string
+	YouAreUsingJade bool
+}
+
+// Test parsing and evaluating jade.
+func TestDataMap(t *testing.T) {
+	template, err := Load("../res/test.jade")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	buf := new(bytes.Buffer)
+	//test using map
+	data := map[string]interface{}{
+		"PageTitle":       "Hello Jade",
+		"YouAreUsingJade": true,
+	}
+	renderJade(buf, template, data)
+	//fmt.Println(buf.String())
+}
+
+// Test parsing and evaluating jade.
+func TestDataStruct(t *testing.T) {
+	template, err := Load("../res/test.jade")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	buf := new(bytes.Buffer)
+	data := &testTemplateData{"Hello Jade", true}
+	renderJade(buf, template, data)
+	//fmt.Println(buf.String(), j.Log)
+}
+
+// Test parsing jade extends functions.
+func TestParseExtends(t *testing.T) {
+	template, err := Load("../res/extends/index.jade")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	result := Parse(template)
+	fmt.Println(result.Root, result.Extends)
+}
+
+// store jade and html result for comparison.
+type verifyItem struct {
+	name string
+	jade string
+	html string
+}
+
+// Load a test file
+func Load(filename string) (string, error) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// Save a test result
+func Save(filename string, data []byte) {
+	ioutil.WriteFile(filename, data, os.ModePerm)
+}
+
+// RenderJade shortcut function.
+func renderJade(buf *bytes.Buffer, template string, data interface{}) *EvalJade {
+	eval := NewEvalJade(buf)
+	eval.SetData(data)
+	eval.RenderString(template)
+	return eval
 }
 
 // evaluate jade
