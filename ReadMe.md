@@ -94,6 +94,8 @@ else
   p x is equal or larger than 10
 ```
 
+For more example's see the example folder included. The example folder contains a standard http example using gojade and a gin go web framework example using gojade instead of the standard go templates.
+
 
 ## Differences between jade and gojade
 
