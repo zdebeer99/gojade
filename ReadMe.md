@@ -14,22 +14,24 @@ all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is wor
 
 pull request and issues is welcomed.
 
-## Why GoJade
+## Examples
 
-gojade supports common math functions, binary operators and string concatenation as used in most languages.
+gojade supports common math functions, boolean operators and string concatenation.
 
 Examples:
-   -var x = 5
-   p Do some maths
-   p=x*2
-   p or show the answer inline #{x*2}
-   p More Maths
-   p=(x+3)*2
-   if x>=0 && x<10
-     p x is smaller than ten
-   else
-     p x is larger or equal to ten.
-
+```jade
+// declare a variable called x
+-var x = 5
+p Do some maths with x = 5
+p x * 2 = #{x*2}
+p More Maths (x+3)*2
+p=(x+3)*2
+// some boolean operations
+if x>=0 && x<10
+  p x is smaller than ten
+else 
+  p x is equal or larger than 10
+```
 
 ## Differences between jade and gojade
 
@@ -74,14 +76,18 @@ Special cases are:
 
 Defining a variable using var
 
-	- var x = 5
-  - var person = {name:"ben", age:5}
+```jade
+- var x = 5
+- var person = {name:"ben", age:5}
+```
 
 [Planned] Calling Unbuffered Functions defined in your code.
 
-	- SomeGoFunction(5,64)
-	  p This Content will be passed to the last argument of SomeGoFunction()
-	p This content is outside of SomeGoFunctions scope.
+```jade
+- SomeGoFunction(5,64)
+  p This Content will be passed to the last argument of SomeGoFunction()
+  p This content is outside of SomeGoFunctions scope.
+```
 
 [may change] a unbuffered function must take either a string or a *TreeNode as the last argument. the content below the unbeffered function will be passed to the function. If the function takes a string the content will first be parsed and then passed to the function.
 
