@@ -1,12 +1,12 @@
-# Go Jade
+# GoJade
 
-jade template rendering library for Google Go programing language (golang). GoJade is inspired by the javascript template library http://jade-lang.com/
+Jade template rendering library for Google Go programing language (golang). GoJade is inspired by the javascript template library http://jade-lang.com/
 
-gojade renders a jade file directly to HTML, and does not compile jade to a go template first. 
+GoJade renders a jade file directly to HTML. 
 
 all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is working except for one or two. See status for more details.
 
-pull request is welcomed.
+pull request welcomed.
 
 Version: 0.012 Alpha
 
@@ -200,4 +200,6 @@ Some Functions already included is:
 
 * more is planned, suggestions is welcomed.
 
-golang jade
+
+
+golang jade go jade gojade 

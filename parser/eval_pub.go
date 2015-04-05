@@ -61,13 +61,7 @@ func (this *EvalJade) Exec(parsedJade *TreeNode) {
 }
 
 func (this *EvalJade) RegisterFunction(name string, fn interface{}) {
-	fnvalue := reflect.ValueOf(fn)
-	switch fnvalue.Kind() {
-	case reflect.Func:
-		this.Extfunc[name] = fnvalue
-	default:
-		panic("argument is not a function. " + fnvalue.String())
-	}
+	registerFunction(this.Extfunc, name, fn)
 }
 
 func (this *EvalJade) evalFile(filename string) *ParseResult {

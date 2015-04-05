@@ -38,6 +38,16 @@ func addValueFuncs(out map[string]reflect.Value, in funcMap) {
 	}
 }
 
+func registerFunction(addto map[string]reflect.Value, name string, fn interface{}) {
+	fnvalue := reflect.ValueOf(fn)
+	switch fnvalue.Kind() {
+	case reflect.Func:
+		addto[name] = fnvalue
+	default:
+		panic("argument is not a function. " + fnvalue.String())
+	}
+}
+
 func (this *EvalJade) warning(warning string, node *TreeNode, args ...interface{}) {
 	this.Log = append(this.Log, fmt.Sprintf("Warning: "+warning, args...))
 }

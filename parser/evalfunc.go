@@ -7,14 +7,14 @@ import (
 )
 
 func (this *EvalJade) registerStandardFunctions() {
-	this.RegisterFunction("len", len)
-	this.RegisterFunction("upper", upper)
-	this.RegisterFunction("lower", lower)
-	this.RegisterFunction("format", format)
 
+	registerFunction(this.builtin, "len", length)
+	registerFunction(this.builtin, "upper", upper)
+	registerFunction(this.builtin, "lower", lower)
+	registerFunction(this.builtin, "format", format)
 }
 
-func len(value interface{}) int {
+func length(value interface{}) int {
 	rvalue := reflect.ValueOf(value)
 	return rvalue.Len()
 }

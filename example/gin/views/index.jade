@@ -1,0 +1,11 @@
+extends ./layout.jade
+block content
+  h1= Title
+  #container.col
+    p Hello my name is #{Name} I am #{Age} years old and in 10 years I will be #{Age+10} years old.
+    h2=Name
+    p have #{len(Children)} children, there names are:
+    ul
+      each child in Children
+        li= child
+    p Thanks for using GoJade.
