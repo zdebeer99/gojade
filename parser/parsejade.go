@@ -134,7 +134,7 @@ func (this *parser) parseAttribute() stateFn {
 	var mode int
 attributes:
 	for {
-		if this.scanHtmlWord() {
+		if scan.ScanHtmlWord() {
 			if mode == 1 {
 				tag.AddAttribute(this.newNode(NewTextToken(word)))
 			}
@@ -340,7 +340,7 @@ func (this *parser) parseHtmlTagClass() stateFn {
 	if !ok {
 		this.error("Expecting a Html Tag before the . operator. Current Tag: %s", this.curr.String())
 	}
-	if this.scanHtmlWord() {
+	if scan.ScanHtmlWord() {
 		tag.SetClass(this.newNode(NewTextToken(scan.Commit())))
 		return branchAfterHtmlTag
 	}
@@ -355,7 +355,7 @@ func (this *parser) parseHtmlTagId() stateFn {
 		this.error("Expecting a Html Tag before the # operator. Current Tag: %s", this.curr.String())
 	}
 	scan.Ignore()
-	if this.scanHtmlWord() {
+	if scan.ScanHtmlWord() {
 		tag.AddKeyValue("id", this.newNode(NewTextToken(scan.Commit())))
 		return branchAfterHtmlTag
 	}
@@ -693,21 +693,6 @@ func (this *parser) getContent() *TreeNode {
 	}
 	this.ignore()
 	return node
-}
-
-func (this *parser) scanHtmlWord() bool {
-	var result bool
-loop:
-	for this.scan.ScanWord() {
-		result = true
-		switch this.scan.Peek() {
-		case '-':
-			this.scan.Next()
-			continue loop
-		}
-		break loop
-	}
-	return result
 }
 
 func InSlice(slice []string, value string) bool {

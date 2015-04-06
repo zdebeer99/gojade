@@ -9,6 +9,7 @@ import (
 	"net/http"
 )
 
+//create a global variable referencing GoJade
 var jade *gojade.GoJade
 
 //model, this struct is passed to the jade passed.

@@ -6,6 +6,7 @@ import (
 )
 
 const charValidString string = "_"
+const charValidHtmlString string = "_-"
 
 // isSpace reports whether r is a space character.
 func IsSpace(r rune) bool {
@@ -46,6 +47,24 @@ func (this *Scanner) ScanWord() bool {
 		for {
 			r = this.Next()
 			if IsAlphaNumeric(r) {
+				continue
+			} else {
+				this.Backup()
+				return true
+			}
+		}
+	}
+	this.Backup()
+	return false
+}
+
+//Scans a word with special characters like "col-3"
+func (this *Scanner) ScanHtmlWord() bool {
+	r := this.Next()
+	if unicode.IsLetter(r) || strings.IndexRune(charValidHtmlString, r) >= 0 {
+		for {
+			r = this.Next()
+			if IsAlphaNumeric(r) || strings.ContainsRune(charValidHtmlString, r) {
 				continue
 			} else {
 				this.Backup()
