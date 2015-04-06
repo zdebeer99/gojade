@@ -14,7 +14,9 @@ This library is under development and changes can be expected.
 
 MIT License (MIT)
 
+
 ## Using GoJade
+
 
 **Installing gojade**
 
@@ -22,13 +24,15 @@ MIT License (MIT)
 go get github.com/zdebeer99/gojade 
 ```
 
+
 **Importing into your project**
 
-'''go
+```go
 import (
   "github.com/zdebeer99/gojade"
 )
-'''
+```
+
 
 **Basic Usage**
 
@@ -49,87 +53,81 @@ func main(){
 
 ```
 
+
 ## Jade Examples
 
-Jade Example:
+For Example's on using GoJade with go [net/http](http://golang.org/pkg/net/http/) and [gin](https://gin-gonic.github.io/gin/) see the [Example Folder](https://github.com/zdebeer99/gojade/tree/master/example)
 
-```jade
-doctype html
-html(lang="en")
-  head
-    title= pageTitle
-    script(type='text/javascript').
-      if (foo) {
-         bar(1 + 5)
-      }
-  body
-    h1 Jade - node template engine
-    #container.col
-      if youAreUsingJade
-        p You are amazing
-      else
-        p Get on it!
-      p.
-        Jade is a terse and simple
-        templating language with a
-        strong focus on performance
-        and powerful features.
-```
-
-gojade supports math operators, operator precedence, boolean operators and string concatenation.
 
 Examples:
 
+gojade supports math operators, operator precedence, boolean operators and string concatenation.
+
 ```jade
-// declare a variable called x
+//- declare a variable called x
 -var x = 5
 p Do some maths with x = 5
 p x * 2 = #{x*2}
 p More Maths (x+3)*2
 p=(x+3)*2
-// some boolean operations
+//- boolean operations
 if x>=0 && x<10
   p x is smaller than ten
 else 
   p x is equal or larger than 10
 ```
 
-For more example's see the example folder included. The example folder contains a standard http example using gojade and a gin go web framework example using gojade instead of the standard go templates.
+
+## Status
+
+
+**Whats is out standing**
+
+- Filters
+- Tag Interpolation
+
+gojade requires a clean up, some function names and parameters may change. The parser is currently stable but evaluating the parse tree use panic instead of returning the error as a result. This will be fixed to return the error rather than panicking.
+
+benchmarks and performance improvements has not been done yet.
 
 
 ## Differences between jade and gojade
 
 all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is working except for one or two. See status for more details.
 
+
 **javascript**
 
 Keep in mind that gojade does not run in a javascript environment, because of this server side javascript in gojade is not supported as in jade, a work around will be to register custom functions defined in go and calling these functions from your jade template.
 
-Registering Custom Functions
+Registering Custom Functions.
 ```go
 jade:=NewGoJade()
 // Register a function called hello, that can be used in your jade template
 jade.RegisterFunction("hello", func(name string){return "Hello"+name})
 ```
 
+Using the function in your jade.
 ```jade
 p= hello("Ben")
 ```
 
+
 **variable names**
 
-Variable names is case sensitive
+* Variable names is case sensitive.
 
-Only public fields can be accessed from a struct data argument.
+* Only public fields can be accessed from a struct.
 
-If a variable is not defined a warning will be Logged and nil is returned.
+* If a variable is not defined a warning will be Logged and nil is returned.
 
-nil will eval to false
+* nil will eval to false
 
 
 **doctype**
 
-the doctype shortcut does not support custom doctypes.
+The doctype shortcut does not support custom doctypes.
+
 
 **Boolean Attribute**
 
@@ -168,18 +166,6 @@ Defining a variable using var
 
 [may change] a unbuffered function must take either a string or a *TreeNode as the last argument. the content below the unbeffered function will be passed to the function. If the function takes a string the content will first be parsed and then passed to the function.
 
-## Status
-
-**Whats is out standing**
-
-- filters and include with filters
-- calling go functions from jade as unbuffered code.
-- Tag Interpolation
-
-gojade has not been cleaned up yet and some function names and parameters may change. The parser is currently pretty stable but evaluating the parse tree use panic instead of returning the error as a result. This will be changed to return the error rather than panicking, and there for some functions return arguments will change.
-
-benchmarks and performance improvements has not been done yet.
-
 
 ## Useful functions
 
@@ -190,7 +176,7 @@ someArray.length
 
 to assist with these scenarios you can register your own go functions.
 
-Some Functions already included is:
+Built in Functions included is:
 
 * len(value)
 
