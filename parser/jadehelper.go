@@ -2,6 +2,10 @@ package parser
 
 import "reflect"
 
+type Getter interface {
+	Get(string) reflect.Value
+}
+
 // ContextStack is a stack of maps, used to track functions with context
 // like for loops, mixins, etc
 type ContextStack struct {

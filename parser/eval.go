@@ -108,7 +108,7 @@ func (this *EvalJade) getValueAs(node *TreeNode, argtype reflect.Type) reflect.V
 	if rvalue.Type().AssignableTo(argtype) {
 		return rvalue
 	}
-	panic(fmt.Errorf("Invalid Type Conversion! %v => %v", rvalue.Type().Name(), argtype))
+	//panic(fmt.Errorf("Invalid Type Conversion! %v => %v", rvalue.Type().Name(), argtype))
 	return rvalue
 }
 
@@ -376,9 +376,9 @@ func (this *EvalJade) getIdentityValue(node *TreeNode, token Token) interface{} 
 			panic("Expecting a Variable Name. Functions called from data not supported yet.")
 		}
 		if sval, ok := this.stack.GetOk(identity.Name); ok {
-			val1, err = this.getIdentityRValue(sval, identity.Next)
+			val1, err = this.findIdentityValue(sval, identity, true)
 		} else {
-			val1, err = this.getIdentityRValue(this.data, identity)
+			val1, err = this.findIdentityValue(this.data, identity, false)
 		}
 		if err != nil {
 			switch err.(type) {
@@ -402,58 +402,75 @@ func (this *EvalJade) getIdentityValue(node *TreeNode, token Token) interface{} 
 	}
 }
 
-func (this *EvalJade) getIdentityRValue(rval reflect.Value, identity *FuncToken) (result reflect.Value, err error) {
-	if identity == nil {
-		return rval, nil
+func (this *EvalJade) findIdentityValue(rval reflect.Value, identity *FuncToken, got bool) (reflect.Value, error) {
+	var mval reflect.Value = rval
+	var err error
+	if !got && len(identity.Name) > 0 {
+		mval, err = this.getVariableValue(rval, identity.Name)
+		if err != nil {
+			return mval, err
+		}
 	}
+	if len(identity.Index) > 0 {
+		mval, err = this.getVariableValue(mval, identity.Index)
+		if err != nil {
+			return mval, err
+		}
+	}
+	if identity.Next != nil {
+		mval, err = this.findIdentityValue(mval, identity.Next, false)
+		if err != nil {
+			return mval, err
+		}
+	}
+	return mval, err
+}
+
+func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result reflect.Value, err error) {
 	if !rval.IsValid() {
-		err = fmt.Errorf("Invalid Variable. '%s'", identity.String())
+		err = fmt.Errorf("Invalid Variable. '%s'", name)
 		return
-	}
-	if !identity.IsIdentity {
-		panic("functions on type not supported yet. function: " + identity.String())
 	}
 	switch rval.Kind() {
 	case reflect.Map:
-		rindex := reflect.ValueOf(identity.Name)
-		mval := rval.MapIndex(rindex)
-		if !mval.IsValid() {
-			return mval, VariableNotDefined{fmt.Errorf("Variable %q not defined on map", identity.Name)}
+		rindex := reflect.ValueOf(name)
+		result = rval.MapIndex(rindex)
+		if !result.IsValid() {
+			err = VariableNotDefined{fmt.Errorf("Variable %q not defined on map", name)}
 		}
-		return this.getIdentityRValue(mval, identity.Next)
+		return
 	case reflect.Array, reflect.Slice:
-		if identity.Index == "" {
-			return rval, nil
+		result = rval.Index(getIdentityIndex(rval, name))
+		if !result.IsValid() {
+			err = fmt.Errorf("Invalid Index %q on %s", name, rval)
 		}
-		mval := rval.Index(getIdentityIndex(rval, identity.Index))
-		if !mval.IsValid() {
-			return mval, fmt.Errorf("Invalid Index %q on variable %q on %s", identity.Index, identity.Name, rval)
-		}
-		return this.getIdentityRValue(mval, identity.Next)
+		return
 	case reflect.Struct:
-		mval := rval.FieldByName(identity.Name)
-		if !mval.IsValid() {
-			return mval, VariableNotDefined{fmt.Errorf("Variable %q not defined on struct.", identity.Name)}
+		result = rval.FieldByName(name)
+		if !result.IsValid() {
+			err = VariableNotDefined{fmt.Errorf("Variable %q not defined on struct.", name)}
 		}
-		return this.getIdentityRValue(mval, identity.Next)
+		return
 	case reflect.Interface, reflect.Ptr:
 		//Handle LinearMap struct
 		if rval.Type() == LinearMapType {
 			if val1, ok := rval.Interface().(*LinearMap); ok {
-				return this.getIdentityRValue(reflect.ValueOf(val1.Get(identity.Name)), identity.Next)
+				result = reflect.ValueOf(val1.Get(name))
+				return
 			}
 		}
 		//Other Pointers
-		return this.getIdentityRValue(rval.Elem(), identity)
+		return this.getVariableValue(rval.Elem(), name)
 	default:
 		//Handle LinearMap struct
 		if rval.Type() == LinearMapType {
 			if val1, ok := rval.Interface().(*LinearMap); ok {
-				return this.getIdentityRValue(reflect.ValueOf(val1.Get(identity.Name)), identity.Next)
+				result = reflect.ValueOf(val1.Get(name))
+				return
 			}
 		}
 		//Other Values
-		return this.getIdentityRValue(rval, identity.Next)
+		panic("Variable not resolved " + name)
 	}
 }
 
@@ -569,7 +586,6 @@ func (this *EvalJade) evalOperator(node *TreeNode, token *OperatorToken) interfa
 		return this.conditional(node)
 	}
 	fn := this.findFunction(token.Operator)
-	fmt.Println("Operator", token.Operator)
 	return this.callFunc(fn, node.items)
 }
 
@@ -610,7 +626,6 @@ func (this *EvalJade) evalFunc(node *TreeNode, token *FuncToken) interface{} {
 		return ""
 	}
 	fn := this.findFunction(token.Name)
-	fmt.Println("Func", token.Name)
 	return this.callFunc(fn, token.Arguments)
 }
 
@@ -645,7 +660,6 @@ func (this *EvalJade) setvariable(nameNode *TreeNode, valueNode *TreeNode) {
 	if !varname.IsIdentity {
 		panic("var declaration expecting variable name. Found Function " + nameNode.Value.String())
 	}
-
 	this.stack.SetGlobal(varname.Name, this.getValue(valueNode))
 }
 

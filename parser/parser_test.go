@@ -48,7 +48,7 @@ func TestVerifyJade(t *testing.T) {
 }
 
 // Render Jade file found on jade-lang home page.
-func TestParseJade(t *testing.T) {
+func _TestParseJade(t *testing.T) {
 	template, err := Load("../res/test.jade")
 	if err != nil {
 		t.Error(err)
@@ -64,10 +64,21 @@ func TestParseJade(t *testing.T) {
 type testTemplateData struct {
 	PageTitle       string
 	YouAreUsingJade bool
+	Person          testSubTemplateData
+	Children        []string
+}
+
+type testSubTemplateData struct {
+	Name string
+	Age  int
+}
+
+func (this *testTemplateData) Hello() string {
+	return "Hello GoJade"
 }
 
 // Test parsing and evaluating jade.
-func TestDataMap(t *testing.T) {
+func _TestDataMap(t *testing.T) {
 	template, err := Load("../res/test.jade")
 	if err != nil {
 		t.Error(err)
@@ -78,26 +89,30 @@ func TestDataMap(t *testing.T) {
 	data := map[string]interface{}{
 		"PageTitle":       "Hello Jade",
 		"YouAreUsingJade": true,
+		"Person":          testSubTemplateData{"ben", 32},
+		"Children":        []string{"sue", "mike", "alex"},
 	}
+	result := Parse(template)
+	fmt.Println(result.Root)
 	renderJade(buf, template, data)
-	//fmt.Println(buf.String())
+	fmt.Println(buf.String())
 }
 
 // Test parsing and evaluating jade.
-func TestDataStruct(t *testing.T) {
+func _TestDataStruct(t *testing.T) {
 	template, err := Load("../res/test.jade")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	buf := new(bytes.Buffer)
-	data := &testTemplateData{"Hello Jade", true}
+	data := &testTemplateData{"Hello Jade", true, testSubTemplateData{"ben", 32}, []string{"sue", "mike", "alex"}}
 	renderJade(buf, template, data)
 	//fmt.Println(buf.String(), j.Log)
 }
 
 // Test parsing jade extends functions.
-func TestParseExtends(t *testing.T) {
+func _TestParseExtends(t *testing.T) {
 	template, err := Load("../res/extends/index.jade")
 	if err != nil {
 		t.Error(err)

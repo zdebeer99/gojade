@@ -218,15 +218,23 @@ loop:
 				break loop
 			}
 		case '[':
+			this.ignore()
+			if len(chainedItem.Index) > 0 {
+				chainedItem.Next = NewIdentityToken("")
+				chainedItem = chainedItem.Next
+			}
 			if scan.ScanNumber() {
 				chainedItem.Index = scan.Commit()
-				if scan.Next() != ']' {
-					this.error("Index '[]' not closed, expecting ']' found: %q", this.commit())
-					break loop
-				}
-				this.ignore()
-				continue loop
+			} else if index := this.parseText(); len(index) > 0 {
+				chainedItem.Index = index
+			} else {
+				this.error("Invalid value in Index '[]' at variable %q", chainedItem.Name)
 			}
+			if scan.Next() != ']' {
+				this.error("Index '[]' not closed, expecting ']' found: %q", this.commit())
+				break loop
+			}
+			continue loop
 		case '(':
 			if len(chainedItem.Arguments) == 0 {
 				chainedItem.IsIdentity = false
