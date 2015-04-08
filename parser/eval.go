@@ -102,6 +102,16 @@ func (this *EvalJade) getValue(node *TreeNode) interface{} {
 	}
 }
 
+func (this *EvalJade) getValueAs(node *TreeNode, argtype reflect.Type) reflect.Value {
+	value := this.getValue(node)
+	rvalue := reflect.ValueOf(value)
+	if rvalue.Type().AssignableTo(argtype) {
+		return rvalue
+	}
+	panic(fmt.Errorf("Invalid Type Conversion! %v => %v", rvalue.Type().Name(), argtype))
+	return rvalue
+}
+
 func (this *EvalJade) getGroup(node *TreeNode, group *GroupToken) interface{} {
 	if group.GroupType == "{}" {
 		result := &LinearMap{make(map[string]interface{}), make([]string, 0)}
@@ -559,6 +569,7 @@ func (this *EvalJade) evalOperator(node *TreeNode, token *OperatorToken) interfa
 		return this.conditional(node)
 	}
 	fn := this.findFunction(token.Operator)
+	fmt.Println("Operator", token.Operator)
 	return this.callFunc(fn, node.items)
 }
 
@@ -599,6 +610,7 @@ func (this *EvalJade) evalFunc(node *TreeNode, token *FuncToken) interface{} {
 		return ""
 	}
 	fn := this.findFunction(token.Name)
+	fmt.Println("Func", token.Name)
 	return this.callFunc(fn, token.Arguments)
 }
 
@@ -614,7 +626,7 @@ func (this *EvalJade) callFunc(fn reflect.Value, args []*TreeNode) interface{} {
 		if fntype.In(argpos) == TreeNodeType {
 			argv[i] = reflect.ValueOf(args[i])
 		} else {
-			argv[i] = reflect.ValueOf(this.getValue(args[i]))
+			argv[i] = this.getValueAs(args[i], fntype.In(argpos))
 		}
 	}
 	if fntype.NumOut() == 0 {
