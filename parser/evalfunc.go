@@ -12,6 +12,7 @@ func (this *EvalJade) registerStandardFunctions() {
 	registerFunction(this.builtin, "upper", upper)
 	registerFunction(this.builtin, "lower", lower)
 	registerFunction(this.builtin, "format", format)
+	registerFunction(this.builtin, "isnull", isnull)
 }
 
 func length(value interface{}) int {
@@ -29,4 +30,11 @@ func lower(txt string) string {
 
 func format(txt string, args ...interface{}) string {
 	return fmt.Sprintf(txt, args...)
+}
+
+func isnull(value, result interface{}) interface{} {
+	if value == nil {
+		return result
+	}
+	return value
 }
