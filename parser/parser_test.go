@@ -160,8 +160,8 @@ func Save(filename string, data []byte) {
 }
 
 // RenderJade shortcut function.
-func renderJade(buf *bytes.Buffer, template string, data interface{}) *EvalJade {
-	eval := NewEvalJade(buf)
+func renderJade(buf *bytes.Buffer, template string, data interface{}) *Engine {
+	eval := New(buf)
 	eval.SetData(data)
 	eval.RegisterFunction("safeDivide", func(v1, v2 int) int {
 		if v2 == 0 {
