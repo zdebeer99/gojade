@@ -24,7 +24,7 @@ var builtin funcMap = funcMap{
 	"+":            addNumOrString,
 	"-":            subtract,
 	"*":            multiply,
-	"/":            devide,
+	"/":            divide,
 	"&&":           and,
 	"and":          and,
 	"||":           or,
@@ -92,7 +92,7 @@ func addNumOrString(arg1 interface{}, arg2 ...interface{}) interface{} {
 	}
 }
 
-func addString(arg1 interface{}, arg2 ...interface{}) interface{} {
+func addString(arg1 interface{}, arg2 ...interface{}) string {
 	buf := new(bytes.Buffer)
 	buf.WriteString(ObjToString(arg1))
 
@@ -102,7 +102,7 @@ func addString(arg1 interface{}, arg2 ...interface{}) interface{} {
 	return buf.String()
 }
 
-func addNum(arg1 interface{}, arg2 ...interface{}) interface{} {
+func addNum(arg1 interface{}, arg2 ...interface{}) float64 {
 	result := reflect.ValueOf(arg1).Float()
 	for i := 0; i < len(arg2); i++ {
 		result = result + reflect.ValueOf(arg2[i]).Float()
@@ -110,7 +110,7 @@ func addNum(arg1 interface{}, arg2 ...interface{}) interface{} {
 	return result
 }
 
-func subtract(arg1 interface{}, arg2 ...interface{}) interface{} {
+func subtract(arg1 interface{}, arg2 ...interface{}) float64 {
 	result := reflect.ValueOf(arg1).Float()
 	for i := 0; i < len(arg2); i++ {
 		result = result - reflect.ValueOf(arg2[i]).Float()
@@ -118,7 +118,7 @@ func subtract(arg1 interface{}, arg2 ...interface{}) interface{} {
 	return result
 }
 
-func multiply(arg1 interface{}, arg2 ...interface{}) interface{} {
+func multiply(arg1 interface{}, arg2 ...interface{}) float64 {
 	result := reflect.ValueOf(arg1).Float()
 	for i := 0; i < len(arg2); i++ {
 		result = result * reflect.ValueOf(arg2[i]).Float()
@@ -126,7 +126,7 @@ func multiply(arg1 interface{}, arg2 ...interface{}) interface{} {
 	return result
 }
 
-func devide(arg1 interface{}, arg2 ...interface{}) interface{} {
+func divide(arg1 interface{}, arg2 ...interface{}) float64 {
 	result := reflect.ValueOf(arg1).Float()
 	for i := 0; i < len(arg2); i++ {
 		result = result / reflect.ValueOf(arg2[i]).Float()
@@ -140,37 +140,37 @@ func truth(a interface{}) bool {
 	return t
 }
 
-func and(arg0 interface{}, args ...interface{}) interface{} {
+func and(arg0 interface{}, args ...interface{}) bool {
 	if !truth(arg0) {
-		return arg0
+		return false
 	}
 	for i := range args {
 		arg0 = args[i]
 		if !truth(arg0) {
-			break
+			return false
 		}
 	}
-	return arg0
+	return true
 }
 
 // or computes the Boolean OR of its arguments, returning
 // the first true argument it encounters, or the last argument.
-func or(arg0 interface{}, args ...interface{}) interface{} {
+func or(arg0 interface{}, args ...interface{}) bool {
 	if truth(arg0) {
-		return arg0
+		return true
 	}
 	for i := range args {
 		arg0 = args[i]
 		if truth(arg0) {
-			break
+			return true
 		}
 	}
-	return arg0
+	return false
 }
 
 // eq evaluates the comparison a == b || a == c || ...
 func eq(arg1 interface{}, arg2 ...interface{}) (bool, error) {
-	v1 := reflect.ValueOf(arg1)
+	v1 := toReflectValue(arg1)
 	k1, err := basicKind(v1)
 	if err != nil {
 		return false, err

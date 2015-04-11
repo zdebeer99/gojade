@@ -1,6 +1,8 @@
 package parser
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type Getter interface {
 	Get(string) reflect.Value
@@ -36,12 +38,12 @@ func (this *ContextStack) DropLayer() {
 
 // Set
 func (this *ContextStack) Set(name string, value interface{}) {
-	this.stack[this.top][name] = reflect.ValueOf(value)
+	this.stack[this.top][name] = toReflectValue(value)
 }
 
 // SetGlobal Set a value on the global scope.
-func (this *ContextStack) SetGlobal(name string, value interface{}) {
-	this.stack[0][name] = reflect.ValueOf(value)
+func (this *ContextStack) SetGlobal(name string, value reflect.Value) {
+	this.stack[0][name] = value
 }
 
 // Get

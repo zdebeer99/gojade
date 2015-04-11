@@ -260,8 +260,6 @@ loop:
 		expr := this.parseExpression()
 		if expr != nil {
 			ftoken.AddArgument(expr)
-		} else {
-			ftoken.AddArgument(this.newNode(NewEmptyToken()))
 		}
 
 		r := scan.Next()

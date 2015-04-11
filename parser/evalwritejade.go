@@ -152,7 +152,7 @@ func (this *jadewriter) Group(node *TreeNode) {
 //KeyValueAttribute Write key value pairs for attributes.
 func (this *jadewriter) KeyValueAttribute(keyvalue *KeyValueToken) {
 	valueNode, escape := stripEscapeHtml(keyvalue.Value)
-	value := this.template.getValue(valueNode)
+	value := this.template.getValue(valueNode).Interface()
 	switch val := value.(type) {
 	case bool:
 		if val {
@@ -200,7 +200,7 @@ func (this *jadewriter) text(token *TextToken) {
 func (this *jadewriter) jadecase(node *TreeNode, fn *FuncToken) {
 	var caseval interface{}
 	if len(fn.Arguments) == 1 {
-		caseval = this.template.getValue(fn.Arguments[0])
+		caseval = this.template.getValue(fn.Arguments[0]).Interface()
 	}
 
 	var whenprev bool
@@ -215,9 +215,9 @@ func (this *jadewriter) jadecase(node *TreeNode, fn *FuncToken) {
 				whentrue = this.template.getBool(when.Arguments[0])
 			} else {
 				var err error
-				whentrue, err = eq(caseval, this.template.getValue(when.Arguments[0]))
+				whentrue, err = eq(caseval, this.template.getValue(when.Arguments[0]).Interface())
 				if err != nil {
-					panic("Error on When value. " + err.Error())
+					panic("case: Error on When value. " + err.Error())
 				}
 			}
 			if whentrue || whenprev {

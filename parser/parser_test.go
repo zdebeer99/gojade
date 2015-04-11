@@ -7,21 +7,33 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 	"unicode/utf8"
 )
 
 // Set testonly to a test number to only test that example.
 var testonly int = -1
 
+type VerifyStruct struct {
+	PageTitle       string
+	YouAreUsingJade bool
+	Num1            int
+	Num2            int
+	List            []int
+	Person          *PersonModel
+}
+
+func (this *VerifyStruct) Calc1(Num3 int) int {
+	return this.Num1 * this.Num2 * Num3
+}
+
+func (this *VerifyStruct) Calc0() int {
+	return this.Num1 * this.Num2
+}
+
 // Test Samples in file delimited by @jade, @html keywords. see 'verifyjade.jade' for example.
 func TestVerifyJade(t *testing.T) {
-	data := map[string]interface{}{
-		"pageTitle":       "Hello Jade",
-		"youAreUsingJade": true,
-		"num1":            5,
-		"num2":            2,
-		"list":            []int{1, 2, 3, 4, 5},
-	}
+	data := &VerifyStruct{"Hello Jade", true, 5, 10, []int{32, 37, 38, 42}, &PersonModel{"Ben", 32}}
 	content, err := Load("../res/verifyjade.jade")
 	if err != nil {
 		t.Errorf("Error loading file for testing. %v", err)
@@ -64,13 +76,17 @@ func _TestParseJade(t *testing.T) {
 type testTemplateData struct {
 	PageTitle       string
 	YouAreUsingJade bool
-	Person          testSubTemplateData
+	Person          PersonModel
 	Children        []string
 }
 
-type testSubTemplateData struct {
+type PersonModel struct {
 	Name string
 	Age  int
+}
+
+func (this *PersonModel) Born() int {
+	return time.Now().Year() - this.Age
 }
 
 func (this *testTemplateData) Hello() string {
@@ -89,7 +105,7 @@ func _TestDataMap(t *testing.T) {
 	data := map[string]interface{}{
 		"PageTitle":       "Hello Jade",
 		"YouAreUsingJade": true,
-		"Person":          testSubTemplateData{"ben", 32},
+		"Person":          PersonModel{"ben", 32},
 		"Children":        []string{"sue", "mike", "alex"},
 	}
 	result := Parse(template)
@@ -106,7 +122,7 @@ func _TestDataStruct(t *testing.T) {
 		return
 	}
 	buf := new(bytes.Buffer)
-	data := &testTemplateData{"Hello Jade", true, testSubTemplateData{"ben", 32}, []string{"sue", "mike", "alex"}}
+	data := &testTemplateData{"Hello Jade", true, PersonModel{"ben", 32}, []string{"sue", "mike", "alex"}}
 	renderJade(buf, template, data)
 	//fmt.Println(buf.String(), j.Log)
 }
@@ -147,12 +163,24 @@ func Save(filename string, data []byte) {
 func renderJade(buf *bytes.Buffer, template string, data interface{}) *EvalJade {
 	eval := NewEvalJade(buf)
 	eval.SetData(data)
+	eval.RegisterFunction("safeDivide", func(v1, v2 int) int {
+		if v2 == 0 {
+			return 0
+		}
+		return v1 / v2
+	})
+	eval.RegisterFunction("hello", func(name string) string {
+		return "Hello " + name
+	})
+	eval.RegisterFunction("number5", func() string {
+		return "Five"
+	})
 	eval.RenderString(template)
 	return eval
 }
 
 // evaluate jade
-func evaltest(t *testing.T, i int, item *verifyItem, data map[string]interface{}) {
+func evaltest(t *testing.T, i int, item *verifyItem, data interface{}) {
 	buf := new(bytes.Buffer)
 	t.Logf("Testing %v. %s", i, item.name)
 	j := renderJade(buf, item.jade, data)

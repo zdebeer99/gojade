@@ -16,6 +16,7 @@ type funcMap map[string]interface{}
 
 var TreeNodeType reflect.Type = reflect.TypeOf(new(TreeNode))
 var LinearMapType reflect.Type = reflect.TypeOf(new(LinearMap))
+var EmptyString = reflect.ValueOf("")
 
 // createValueFuncs turns a FuncMap into a map[string]reflect.Value
 func createValueFuncs(funcMap funcMap) map[string]reflect.Value {
@@ -78,41 +79,37 @@ func (this *EvalJade) router(node *TreeNode) {
 	}
 }
 
-func (this *EvalJade) getValue(node *TreeNode) interface{} {
+func (this *EvalJade) getValue(node *TreeNode) reflect.Value {
 	if node == nil {
-		return ""
+		return EmptyString
 	}
+	var result interface{}
 	switch val := node.Value.(type) {
 	case *NumberToken:
-		return val.Value
+		result = val.Value
 	case *TextToken:
-		return val.Text
+		result = val.Text
 	case *BoolToken:
-		return val.Value
+		result = val.Value
 	case *GroupToken:
 		return this.getGroup(node, val)
 	case *OperatorToken:
 		return this.evalOperator(node, val)
-	case *LRFuncToken:
-		return this.evalLRFunc(node, val)
 	case *FuncToken:
 		return this.evalFunc(node, val)
 	default:
 		panic(fmt.Errorf("Invalid Type, Cannot get value of token type %T.", val))
 	}
+	return toReflectValue(result)
 }
 
 func (this *EvalJade) getValueAs(node *TreeNode, argtype reflect.Type) reflect.Value {
 	value := this.getValue(node)
-	rvalue := reflect.ValueOf(value)
-	if rvalue.Type().AssignableTo(argtype) {
-		return rvalue
-	}
-	//panic(fmt.Errorf("Invalid Type Conversion! %v => %v", rvalue.Type().Name(), argtype))
-	return rvalue
+	rvalue := toReflectValue(value)
+	return this.validateType(rvalue, argtype)
 }
 
-func (this *EvalJade) getGroup(node *TreeNode, group *GroupToken) interface{} {
+func (this *EvalJade) getGroup(node *TreeNode, group *GroupToken) reflect.Value {
 	if group.GroupType == "{}" {
 		result := &LinearMap{make(map[string]interface{}), make([]string, 0)}
 		for _, item := range node.items {
@@ -122,14 +119,14 @@ func (this *EvalJade) getGroup(node *TreeNode, group *GroupToken) interface{} {
 				panic("Invalid Map item. All items in a map must be of type KeyValueTokens. found " + item.String())
 			}
 		}
-		return result
+		return toReflectValue(result)
 	}
 	if group.GroupType == "[]" {
 		result := make([]interface{}, len(node.items))
 		for i, item := range node.items {
 			result[i] = this.getValue(item)
 		}
-		return result
+		return toReflectValue(result)
 	}
 	if group.GroupType == "()" {
 		if len(node.items) != 1 {
@@ -142,17 +139,17 @@ func (this *EvalJade) getGroup(node *TreeNode, group *GroupToken) interface{} {
 	for i, item := range node.items {
 		result[i] = this.getValue(item)
 	}
-	return result
+	return toReflectValue(result)
 }
 
 func (this *EvalJade) getBool(node *TreeNode) bool {
 	val1 := this.getValue(node)
-	result, _ := isTrue(reflect.ValueOf(val1))
+	result, _ := isTrue(toReflectValue(val1))
 	return result
 }
 
 func (this *EvalJade) getNumber(node *TreeNode) float64 {
-	val1 := this.getValue(node)
+	val1 := this.getValue(node).Interface()
 	switch val2 := val1.(type) {
 	case int:
 		return float64(val2)
@@ -262,7 +259,8 @@ func (this *EvalJade) jadeEach(node *TreeNode, fn *FuncToken) {
 	this.stack.AddLayer()
 	defer this.stack.DropLayer()
 
-	array := this.getValue(fn.Arguments[2])
+	array := this.getValue(fn.Arguments[2]).Interface()
+
 	if array == nil {
 		panic(fmt.Sprintf("value '%s' after 'each in' not found. ", fn.Arguments[2]))
 	}
@@ -278,7 +276,7 @@ func (this *EvalJade) jadeEach(node *TreeNode, fn *FuncToken) {
 		return
 	}
 
-	arrayValue := reflect.ValueOf(array)
+	arrayValue := toReflectValue(array)
 	switch arrayValue.Kind() {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < arrayValue.Len(); i++ {
@@ -286,7 +284,7 @@ func (this *EvalJade) jadeEach(node *TreeNode, fn *FuncToken) {
 			if len(index) > 0 {
 				this.stack.Set(index, i)
 			}
-			this.stack.Set(ivalue, itemvalue.Interface())
+			this.stack.Set(ivalue, itemvalue)
 			this.evalContent(node)
 		}
 	case reflect.Map:
@@ -294,9 +292,9 @@ func (this *EvalJade) jadeEach(node *TreeNode, fn *FuncToken) {
 		for i := 0; i < len(keys); i++ {
 			itemvalue := arrayValue.MapIndex(keys[i])
 			if len(index) > 0 {
-				this.stack.Set(index, keys[i].Interface())
+				this.stack.Set(index, keys[i])
 			}
-			this.stack.Set(ivalue, itemvalue.Interface())
+			this.stack.Set(ivalue, itemvalue)
 			this.evalContent(node)
 		}
 	case reflect.Float64:
@@ -331,6 +329,11 @@ func (this *EvalJade) getText(node *TreeNode) string {
 
 func ObjToString(val interface{}) string {
 	switch val2 := val.(type) {
+	case reflect.Value:
+		if val2.IsValid() {
+			return ObjToString(val2.Interface())
+		}
+		return ""
 	case string:
 		return val2
 	case []interface{}:
@@ -367,7 +370,7 @@ func ObjToString(val interface{}) string {
 	}
 }
 
-func (this *EvalJade) getIdentityValue(node *TreeNode, token Token) interface{} {
+func (this *EvalJade) getIdentityValue(node *TreeNode, token Token) (reflect.Value, bool) {
 	var val1 reflect.Value
 	var err error
 	switch identity := token.(type) {
@@ -384,18 +387,18 @@ func (this *EvalJade) getIdentityValue(node *TreeNode, token Token) interface{} 
 			switch err.(type) {
 			case VariableNotDefined:
 				this.warning("%s on %q", node, err.Error(), identity.String())
-				return nil
+				return reflect.Value{}, false
 			}
 			panic(fmt.Errorf("Varaible Error '%s': %s", identity.String(), err.Error()))
 		}
 		if !val1.IsValid() {
-			return nil
+			return reflect.Value{}, false
 		}
 		if val1.CanInterface() {
-			return this.toCommonType(val1.Interface())
+			return this.toCommonType(val1), true
 		} else {
 			//Just panic from interface(), until we find better way to handle error.
-			return val1.Interface()
+			return val1, true
 		}
 	default:
 		panic("Unexpected token in identity field.")
@@ -406,9 +409,19 @@ func (this *EvalJade) findIdentityValue(rval reflect.Value, identity *FuncToken,
 	var mval reflect.Value = rval
 	var err error
 	if !got && len(identity.Name) > 0 {
-		mval, err = this.getVariableValue(rval, identity.Name)
-		if err != nil {
-			return mval, err
+		if identity.IsIdentity {
+			mval, err = this.getVariableValue(rval, identity.Name)
+			if err != nil {
+				return mval, err
+			}
+		} else {
+			//if the identity item is a function call the function.
+			meth := rval.MethodByName(identity.Name)
+			if meth.IsValid() {
+				mval := this.callFunc(meth, identity.Name, identity.Arguments)
+				return mval, nil
+			}
+			return mval, fmt.Errorf("function %s not found on struct %v", identity.Name, rval.Kind())
 		}
 	}
 	if len(identity.Index) > 0 {
@@ -455,7 +468,7 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 		//Handle LinearMap struct
 		if rval.Type() == LinearMapType {
 			if val1, ok := rval.Interface().(*LinearMap); ok {
-				result = reflect.ValueOf(val1.Get(name))
+				result = toReflectValue(val1.Get(name))
 				return
 			}
 		}
@@ -465,7 +478,7 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 		//Handle LinearMap struct
 		if rval.Type() == LinearMapType {
 			if val1, ok := rval.Interface().(*LinearMap); ok {
-				result = reflect.ValueOf(val1.Get(name))
+				result = toReflectValue(val1.Get(name))
 				return
 			}
 		}
@@ -482,26 +495,31 @@ func getIdentityIndex(obj interface{}, index string) int {
 	return int(i)
 }
 
-func (this *EvalJade) toCommonType(val1 interface{}) interface{} {
-	switch val2 := val1.(type) {
-	case string, bool, float64:
-		return val2
-	case byte:
-		return float64(val2)
-	case int:
-		return float64(val2)
-	case int16:
-		return float64(val2)
-	case int32:
-		return float64(val2)
-	case uint:
-		return float64(val2)
+func (this *EvalJade) toCommonType(val1 reflect.Value) reflect.Value {
+	var float float64
+	switch val1.Kind() {
+	case reflect.String, reflect.Bool, reflect.Float64:
+		return val1
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return val1.Convert(reflect.TypeOf(float))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return val1.Convert(reflect.TypeOf(float))
+	case reflect.Float32:
+		return val1.Convert(reflect.TypeOf(float))
 	default:
 		return val1
 	}
 }
 
 func (this *EvalJade) findFunction(name string) reflect.Value {
+	//first check the model class
+	if this.data.NumMethod() > 0 {
+		meth := this.data.MethodByName(name)
+		if meth.IsValid() {
+			return meth
+		}
+	}
+	//now check for registered functions.
 	fn, ok := this.builtin[name]
 	if !ok {
 		fn, ok = this.Extfunc[name]
@@ -580,56 +598,57 @@ func (this *EvalJade) evalIfElse(node *TreeNode, token *FuncToken) int {
 	return 0
 }
 
-func (this *EvalJade) evalOperator(node *TreeNode, token *OperatorToken) interface{} {
+func (this *EvalJade) evalOperator(node *TreeNode, token *OperatorToken) reflect.Value {
 	switch token.Operator {
 	case "?":
 		return this.conditional(node)
 	}
 	fn := this.findFunction(token.Operator)
-	return this.callFunc(fn, node.items)
+	val1 := this.callFunc(fn, token.Operator, node.items)
+	return val1
 }
 
-func (this *EvalJade) evalLRFunc(node *TreeNode, token *LRFuncToken) interface{} {
-	return 0
-}
-
-func (this *EvalJade) evalFunc(node *TreeNode, token *FuncToken) interface{} {
+func (this *EvalJade) evalFunc(node *TreeNode, token *FuncToken) reflect.Value {
 	if token.IsIdentity {
-		return this.getIdentityValue(node, token)
+		val1, _ := this.getIdentityValue(node, token)
+		return val1
 	}
 	switch token.Name {
 	case "mixin":
-		return ""
+		return EmptyString
 	case "if", "unless", "else", "when", "default":
 		panic("Internal Error. Function called from wrong place. function " + token.Name)
 	case "case":
 		this.writer.jadecase(node, token)
-		return ""
+		return EmptyString
 	case "var":
 		if len(token.Arguments) != 2 {
 			panic("var, expects 2 arguments, a variable name and a value. Ex: city='New York'")
 		}
 		this.setvariable(token.Arguments[0], token.Arguments[1])
-		return ""
+		return EmptyString
 	case "each":
 		this.jadeEach(node, token)
-		return ""
+		return EmptyString
 	case escapeHtmlFunc:
-		return this.escapeHtml(token.Arguments[0])
+		return toReflectValue(this.escapeHtml(token.Arguments[0]))
 	case jadeMixinFunc:
-		return this.jadeMixin(node, token)
+		return toReflectValue(this.jadeMixin(node, token))
 	case jadeBlockFunc:
 		this.jadeBlock(token)
-		return ""
+		return EmptyString
 	case "include":
 		this.jadeInclude(token)
-		return ""
+		return EmptyString
 	}
 	fn := this.findFunction(token.Name)
-	return this.callFunc(fn, token.Arguments)
+	val1 := this.callFunc(fn, token.Name, token.Arguments)
+
+	return val1
 }
 
-func (this *EvalJade) callFunc(fn reflect.Value, args []*TreeNode) interface{} {
+func (this *EvalJade) delete_callFunc(fn reflect.Value, args []*TreeNode) (val1 reflect.Value, err error) {
+	defer errRecover(&err)
 	fntype := fn.Type()
 	argv := make([]reflect.Value, len(args))
 
@@ -639,17 +658,64 @@ func (this *EvalJade) callFunc(fn reflect.Value, args []*TreeNode) interface{} {
 			argpos = fntype.NumIn() - 1
 		}
 		if fntype.In(argpos) == TreeNodeType {
-			argv[i] = reflect.ValueOf(args[i])
+			argv[i] = toReflectValue(args[i])
 		} else {
-			argv[i] = this.getValueAs(args[i], fntype.In(argpos))
+			argv[i] = this.validateType(this.getValueAs(args[i], fntype.In(argpos)), fntype.In(argpos))
+			fmt.Printf("Var: %v RValue: %v Value: %v Node: %s \n", i, argv[i], argv[i].Interface(), args[i])
 		}
 	}
+
 	if fntype.NumOut() == 0 {
 		fn.Call(argv)
-		return nil
+		return
 	}
-	result := fn.Call(argv)
-	return result[0].Interface()
+	val1 = fn.Call(argv)[0]
+	return
+}
+
+// callFunc executes a function or method call. If it's a method, fun already has the receiver bound, so
+// it looks just like a function call.  The arg list, if non-nil, includes (in the manner of the shell), arg[0]
+// as the function itself.
+func (s *EvalJade) callFunc(fun reflect.Value, name string, args []*TreeNode) reflect.Value {
+	typ := fun.Type()
+	numIn := len(args)
+	numFixed := len(args)
+	if typ.IsVariadic() {
+		numFixed = typ.NumIn() - 1 // last arg is the variadic one.
+		if numIn < numFixed {
+			s.errorf("wrong number of args for %s: want at least %d got %d", name, typ.NumIn()-1, len(args))
+		}
+	} else if numIn < typ.NumIn()-1 || !typ.IsVariadic() && numIn != typ.NumIn() {
+
+		s.errorf("wrong number of args for %s: want %d got %d %v", name, typ.NumIn(), len(args), args)
+	}
+	if !goodFunc(typ) {
+		// TODO: This could still be a confusing error; maybe goodFunc should provide info.
+		s.errorf("can't call method/function %q with %d results", name, typ.NumOut())
+	}
+	// Build the arg list.
+	argv := make([]reflect.Value, numIn)
+	// Args must be evaluated. Fixed args first.
+	i := 0
+	for ; i < numFixed && i < len(args); i++ {
+		//argv[i] = s.evalArg(dot, typ.In(i), args[i])
+		argv[i] = s.getValueAs(args[i], typ.In(i))
+	}
+	// Now the ... args.
+	if typ.IsVariadic() {
+		argType := typ.In(typ.NumIn() - 1).Elem() // Argument is a slice.
+		for ; i < len(args); i++ {
+			argv[i] = s.getValueAs(args[i], argType)
+		}
+	}
+
+	result := fun.Call(argv)
+	// If we have an error that is not nil, stop execution and return that error to the caller.
+	if len(result) == 2 && !result[1].IsNil() {
+		//s.at(node)
+		s.errorf("error calling %s: %s", name, result[1].Interface().(error))
+	}
+	return result[0]
 }
 
 func (this *EvalJade) setvariable(nameNode *TreeNode, valueNode *TreeNode) {
@@ -663,7 +729,7 @@ func (this *EvalJade) setvariable(nameNode *TreeNode, valueNode *TreeNode) {
 	this.stack.SetGlobal(varname.Name, this.getValue(valueNode))
 }
 
-func (this *EvalJade) conditional(node *TreeNode) interface{} {
+func (this *EvalJade) conditional(node *TreeNode) reflect.Value {
 	if len(node.items) != 2 {
 		panic("? condition requires at least 2 arguments. condition?trueValue:falseValue Ex: true?'true value'. found: " + node.String())
 	}
@@ -752,7 +818,68 @@ func basicKind(v reflect.Value) (kind, error) {
 	case reflect.String:
 		return stringKind, nil
 	}
-	return invalidKind, errBadComparisonType
+	return invalidKind, fmt.Errorf("invalid type for comparison of value %v", v.Kind())
+}
+
+// errorf formats the error and terminates processing.
+func (s *EvalJade) errorf(format string, args ...interface{}) {
+	//	name := doublePercent(s.tmpl.Name())
+	//	if s.node == nil {
+	//		format = fmt.Sprintf("template: %s: %s", name, format)
+	//	} else {
+	//		location, context := s.tmpl.ErrorContext(s.node)
+	//		format = fmt.Sprintf("template: %s: executing %q at <%s>: %s", location, name, doublePercent(context), format)
+	//	}
+	panic(fmt.Errorf(format, args...))
+}
+
+// validateType guarantees that the value is valid and assignable to the type.
+func (s *EvalJade) validateType(value reflect.Value, typ reflect.Type) reflect.Value {
+	if !value.IsValid() {
+		if typ == nil || canBeNil(typ) {
+			// An untyped nil interface{}. Accept as a proper nil value.
+			return reflect.Zero(typ)
+		}
+		s.errorf("invalid value; expected %s", typ)
+	}
+	if typ != nil && !value.Type().AssignableTo(typ) {
+		if value.Kind() == reflect.Interface && !value.IsNil() {
+			value = value.Elem()
+			if value.Type().AssignableTo(typ) {
+				return value
+			}
+			// fallthrough
+		}
+		//		if typ.Kind() == reflect.Float64 {
+		//			return s.toCommonType(value)
+		//		}
+		// Does one dereference or indirection work? We could do more, as we
+		// do with method receivers, but that gets messy and method receivers
+		// are much more constrained, so it makes more sense there than here.
+		// Besides, one is almost always all you need.
+		switch {
+		case value.Kind() == reflect.Ptr && value.Type().Elem().AssignableTo(typ):
+			value = value.Elem()
+			if !value.IsValid() {
+				s.errorf("dereference of nil pointer of type %s", typ)
+			}
+		case reflect.PtrTo(value.Type()).AssignableTo(typ) && value.CanAddr():
+			value = value.Addr()
+		default:
+			val1, err := convertTo(value, typ)
+			if err != nil {
+				s.errorf("wrong type for value; expected %s; got %s.", typ, value.Type())
+			}
+			return val1
+		}
+	}
+	return value
+}
+
+func convertTo(value reflect.Value, typ reflect.Type) (result reflect.Value, err error) {
+	defer errRecover(&err)
+	result = value.Convert(typ)
+	return
 }
 
 // isTrue reports whether the value is 'true', in the sense of not the zero of its type,
@@ -783,4 +910,27 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 		return
 	}
 	return truth, true
+}
+
+// errRecover is the handler that turns panics into returns from the top
+// level of Parse.
+func errRecover(errp *error) {
+	e := recover()
+	if e != nil {
+		switch err := e.(type) {
+		case error:
+			*errp = err
+		default:
+			*errp = fmt.Errorf("%v", e)
+		}
+	}
+}
+
+func toReflectValue(value interface{}) reflect.Value {
+	switch val1 := value.(type) {
+	case reflect.Value:
+		return val1
+	default:
+		return reflect.ValueOf(value)
+	}
 }
