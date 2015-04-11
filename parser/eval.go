@@ -14,9 +14,15 @@ import (
 
 type funcMap map[string]interface{}
 
+type nilValue struct {
+	Name   string
+	Reason string
+}
+
 var TreeNodeType reflect.Type = reflect.TypeOf(new(TreeNode))
 var LinearMapType reflect.Type = reflect.TypeOf(new(LinearMap))
 var EmptyString = reflect.ValueOf("")
+var nilValueType = reflect.TypeOf(nilValue{})
 
 // createValueFuncs turns a FuncMap into a map[string]reflect.Value
 func createValueFuncs(funcMap funcMap) map[string]reflect.Value {
@@ -114,7 +120,7 @@ func (this *EvalJade) getGroup(node *TreeNode, group *GroupToken) reflect.Value 
 		result := &LinearMap{make(map[string]interface{}), make([]string, 0)}
 		for _, item := range node.items {
 			if kv, ok := item.Value.(*KeyValueToken); ok {
-				result.Set(kv.Key, this.getValue(kv.Value))
+				result.Set(kv.Key, this.getValue(kv.Value).Interface())
 			} else {
 				panic("Invalid Map item. All items in a map must be of type KeyValueTokens. found " + item.String())
 			}
@@ -330,6 +336,9 @@ func (this *EvalJade) getText(node *TreeNode) string {
 func ObjToString(val interface{}) string {
 	switch val2 := val.(type) {
 	case reflect.Value:
+		if val2.Type().AssignableTo(nilValueType) {
+			return ""
+		}
 		if val2.IsValid() {
 			return ObjToString(val2.Interface())
 		}
@@ -376,7 +385,7 @@ func (this *EvalJade) getIdentityValue(node *TreeNode, token Token) (reflect.Val
 	switch identity := token.(type) {
 	case *FuncToken:
 		if !identity.IsIdentity {
-			panic("Expecting a Variable Name. Functions called from data not supported yet.")
+			this.errorf("Expecting a Variable Name on %v", identity.Name)
 		}
 		if sval, ok := this.stack.GetOk(identity.Name); ok {
 			val1, err = this.findIdentityValue(sval, identity, true)
@@ -442,6 +451,7 @@ func (this *EvalJade) findIdentityValue(rval reflect.Value, identity *FuncToken,
 func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result reflect.Value, err error) {
 	if !rval.IsValid() {
 		err = fmt.Errorf("Invalid Variable. '%s'", name)
+		result = newNilValue(name, "Parent Object nil")
 		return
 	}
 	switch rval.Kind() {
@@ -449,18 +459,21 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 		rindex := reflect.ValueOf(name)
 		result = rval.MapIndex(rindex)
 		if !result.IsValid() {
+			result = newNilValue(name, "Variable Not Found")
 			err = VariableNotDefined{fmt.Errorf("Variable %q not defined on map", name)}
 		}
 		return
 	case reflect.Array, reflect.Slice:
 		result = rval.Index(getIdentityIndex(rval, name))
 		if !result.IsValid() {
+			result = newNilValue(name, "Invalid Index")
 			err = fmt.Errorf("Invalid Index %q on %s", name, rval)
 		}
 		return
 	case reflect.Struct:
 		result = rval.FieldByName(name)
 		if !result.IsValid() {
+			result = newNilValue(name, "Variable Not Defined")
 			err = VariableNotDefined{fmt.Errorf("Variable %q not defined on struct.", name)}
 		}
 		return
@@ -468,7 +481,12 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 		//Handle LinearMap struct
 		if rval.Type() == LinearMapType {
 			if val1, ok := rval.Interface().(*LinearMap); ok {
-				result = toReflectValue(val1.Get(name))
+				if val2 := val1.Get(name); val2 != nil {
+					result = toReflectValue(val2)
+				} else {
+					result = newNilValue(name, "Not Found on Object.")
+					err = VariableNotDefined{fmt.Errorf("Variable %q Not Found on Object.", name)}
+				}
 				return
 			}
 		}
@@ -478,7 +496,12 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 		//Handle LinearMap struct
 		if rval.Type() == LinearMapType {
 			if val1, ok := rval.Interface().(*LinearMap); ok {
-				result = toReflectValue(val1.Get(name))
+				if val2 := val1.Get(name); val2 != nil {
+					result = toReflectValue(val2)
+				} else {
+					result = newNilValue(name, "Not Found on Object.")
+					err = VariableNotDefined{fmt.Errorf("Variable %q Not Found on Object.", name)}
+				}
 				return
 			}
 		}
@@ -661,7 +684,6 @@ func (this *EvalJade) delete_callFunc(fn reflect.Value, args []*TreeNode) (val1 
 			argv[i] = toReflectValue(args[i])
 		} else {
 			argv[i] = this.validateType(this.getValueAs(args[i], fntype.In(argpos)), fntype.In(argpos))
-			fmt.Printf("Var: %v RValue: %v Value: %v Node: %s \n", i, argv[i], argv[i].Interface(), args[i])
 		}
 	}
 
@@ -698,7 +720,6 @@ func (s *EvalJade) callFunc(fun reflect.Value, name string, args []*TreeNode) re
 	// Args must be evaluated. Fixed args first.
 	i := 0
 	for ; i < numFixed && i < len(args); i++ {
-		//argv[i] = s.evalArg(dot, typ.In(i), args[i])
 		argv[i] = s.getValueAs(args[i], typ.In(i))
 	}
 	// Now the ... args.
@@ -708,7 +729,6 @@ func (s *EvalJade) callFunc(fun reflect.Value, name string, args []*TreeNode) re
 			argv[i] = s.getValueAs(args[i], argType)
 		}
 	}
-
 	result := fun.Call(argv)
 	// If we have an error that is not nil, stop execution and return that error to the caller.
 	if len(result) == 2 && !result[1].IsNil() {
@@ -734,10 +754,7 @@ func (this *EvalJade) conditional(node *TreeNode) reflect.Value {
 		panic("? condition requires at least 2 arguments. condition?trueValue:falseValue Ex: true?'true value'. found: " + node.String())
 	}
 	var truevalue, falsevalue *TreeNode
-	if split, ok := node.items[1].Value.(*OperatorToken); ok {
-		if split.Operator != ":" {
-			panic("Expecting : after ? conditional statement. found " + split.Operator)
-		}
+	if split, ok := node.items[1].Value.(*OperatorToken); ok && split.Operator == ":" {
 		truevalue = node.items[1].items[0]
 		falsevalue = node.items[1].items[1]
 	} else {
@@ -804,6 +821,9 @@ const (
 )
 
 func basicKind(v reflect.Value) (kind, error) {
+	if !v.IsValid() {
+		return invalidKind, fmt.Errorf("invalid type for comparison, cannot compare nil value.")
+	}
 	switch v.Kind() {
 	case reflect.Bool:
 		return boolKind, nil
@@ -841,6 +861,14 @@ func (s *EvalJade) validateType(value reflect.Value, typ reflect.Type) reflect.V
 			return reflect.Zero(typ)
 		}
 		s.errorf("invalid value; expected %s", typ)
+	}
+	if value.Type().AssignableTo(nilValueType) {
+		if typ == nil || canBeNil(typ) {
+			// An untyped nil interface{}. Accept as a proper nil value.
+			return reflect.Zero(typ)
+		}
+		nilv := value.Interface().(nilValue)
+		s.errorf("nil value; expected type %s. The variable %q is nil becuase %s", typ, nilv.Name, nilv.Reason)
 	}
 	if typ != nil && !value.Type().AssignableTo(typ) {
 		if value.Kind() == reflect.Interface && !value.IsNil() {
@@ -933,4 +961,8 @@ func toReflectValue(value interface{}) reflect.Value {
 	default:
 		return reflect.ValueOf(value)
 	}
+}
+
+func newNilValue(name string, reason string) reflect.Value {
+	return reflect.ValueOf(nilValue{name, reason})
 }

@@ -121,7 +121,7 @@ func (this *FuncToken) String() string {
 		} else {
 			args := make([]string, len(chain.Arguments))
 			for i, v := range chain.Arguments {
-				args[i] = fmt.Sprintf("%s", strings.Replace(v.String(), "\n", ",", -1))
+				args[i] = fmt.Sprintf("%s", strings.Replace(strings.Replace(v.String(), "\n", ",", -1), "  ", "", -1))
 			}
 			out += fmt.Sprintf("%s(%s)", chain.Name, args)
 		}

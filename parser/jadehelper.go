@@ -72,6 +72,10 @@ type LinearMap struct {
 
 func (this *LinearMap) Set(key string, value interface{}) {
 	hasKey := false
+	switch value.(type) {
+	case *TreeNode, reflect.Value:
+		panic("Cannot store a treenode or reflect.Value in a Linear Map.")
+	}
 	for _, k := range this.keys {
 		if k == key {
 			hasKey = true

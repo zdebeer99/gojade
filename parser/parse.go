@@ -307,7 +307,6 @@ func (this *parser) parseOperator() bool {
 			return true
 		}
 		//change order for */ presedence
-		//fmt.Println(onode, operator, onode.Precedence(operator))
 		if onode.Precedence(operator) > 0 {
 			if lastnode != nil {
 				this.curr = lastnode.Push(NewOperatorToken(operator))
@@ -318,8 +317,7 @@ func (this *parser) parseOperator() bool {
 		if onode.Precedence(operator) < 0 {
 			for {
 				v1, ok := this.curr.Parent().Value.(*OperatorToken)
-				//if ok && strings.Index("+-", v1.Name) >= 0 {
-				if ok && operators.Level(v1.Operator) >= 0 {
+				if ok && v1.Precedence(operator) <= 0 {
 					this.curr = this.curr.Parent()
 				} else {
 					break

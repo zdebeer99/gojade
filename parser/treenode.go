@@ -133,17 +133,21 @@ func (this *TreeNode) StringContent() string {
 	if this.Value.Error() != nil {
 		return fmt.Sprintf("%s[ERROR: %s]", indent, this.Value.Error())
 	} else if len(lines) > 0 {
-		return fmt.Sprintf("\n%s", strings.Join(lines, "\n"))
+		return fmt.Sprintf("\n(%s)", strings.Join(lines, "\n"))
 	} else {
 		return ""
 	}
 }
 
 func (this *TreeNode) String() string {
+	switch val := this.Value.(type) {
+	case *OperatorToken:
+		return printOperator(this, val)
+	}
 	if this.StringContent() == "" {
 		return this.Value.String()
 	}
-	return fmt.Sprintf("[%s:%s]", this.Value.String(), this.StringContent())
+	return fmt.Sprintf("%s %s", this.Value.String(), this.StringContent())
 }
 
 func (this *TreeNode) Depth() int {
@@ -154,4 +158,15 @@ func (this *TreeNode) Depth() int {
 		depth++
 	}
 	return depth
+}
+
+func printOperator(node *TreeNode, operator *OperatorToken) string {
+	str := "("
+	del := ""
+	for _, item := range node.items {
+		str += del + item.String()
+		del = operator.Operator
+	}
+	str += ")"
+	return str
 }

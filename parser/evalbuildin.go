@@ -2,7 +2,6 @@ package parser
 
 import (
 	"bytes"
-	"reflect"
 )
 
 type operatorfunction struct {
@@ -75,14 +74,14 @@ func addNumOrString(arg1 interface{}, arg2 ...interface{}) interface{} {
 	buf.WriteString(ObjToString(arg1))
 	_, havestring := arg1.(string)
 	if !havestring {
-		result = reflect.ValueOf(arg1).Float()
+		result = toReflectValue(arg1).Float()
 	}
 	for i := 0; i < len(arg2); i++ {
 		buf.WriteString(ObjToString(arg2[i]))
 		_, isstring := arg2[i].(string)
 		havestring = havestring || isstring
 		if !havestring {
-			result += reflect.ValueOf(arg2[i]).Float()
+			result += toReflectValue(arg2[i]).Float()
 		}
 	}
 	if havestring {
@@ -103,40 +102,40 @@ func addString(arg1 interface{}, arg2 ...interface{}) string {
 }
 
 func addNum(arg1 interface{}, arg2 ...interface{}) float64 {
-	result := reflect.ValueOf(arg1).Float()
+	result := toReflectValue(arg1).Float()
 	for i := 0; i < len(arg2); i++ {
-		result = result + reflect.ValueOf(arg2[i]).Float()
+		result = result + toReflectValue(arg2[i]).Float()
 	}
 	return result
 }
 
 func subtract(arg1 interface{}, arg2 ...interface{}) float64 {
-	result := reflect.ValueOf(arg1).Float()
+	result := toReflectValue(arg1).Float()
 	for i := 0; i < len(arg2); i++ {
-		result = result - reflect.ValueOf(arg2[i]).Float()
+		result = result - toReflectValue(arg2[i]).Float()
 	}
 	return result
 }
 
 func multiply(arg1 interface{}, arg2 ...interface{}) float64 {
-	result := reflect.ValueOf(arg1).Float()
+	result := toReflectValue(arg1).Float()
 	for i := 0; i < len(arg2); i++ {
-		result = result * reflect.ValueOf(arg2[i]).Float()
+		result = result * toReflectValue(arg2[i]).Float()
 	}
 	return result
 }
 
 func divide(arg1 interface{}, arg2 ...interface{}) float64 {
-	result := reflect.ValueOf(arg1).Float()
+	result := toReflectValue(arg1).Float()
 	for i := 0; i < len(arg2); i++ {
-		result = result / reflect.ValueOf(arg2[i]).Float()
+		result = result / toReflectValue(arg2[i]).Float()
 	}
 	return result
 }
 
 // Boolean logic.
 func truth(a interface{}) bool {
-	t, _ := isTrue(reflect.ValueOf(a))
+	t, _ := isTrue(toReflectValue(a))
 	return t
 }
 
@@ -179,7 +178,7 @@ func eq(arg1 interface{}, arg2 ...interface{}) (bool, error) {
 		return false, errNoComparison
 	}
 	for _, arg := range arg2 {
-		v2 := reflect.ValueOf(arg)
+		v2 := toReflectValue(arg)
 		k2, err := basicKind(v2)
 		if err != nil {
 			return false, err
@@ -229,12 +228,12 @@ func ne(arg1, arg2 interface{}) (bool, error) {
 
 // lt evaluates the comparison a < b.
 func lt(arg1, arg2 interface{}) (bool, error) {
-	v1 := reflect.ValueOf(arg1)
+	v1 := toReflectValue(arg1)
 	k1, err := basicKind(v1)
 	if err != nil {
 		return false, err
 	}
-	v2 := reflect.ValueOf(arg2)
+	v2 := toReflectValue(arg2)
 	k2, err := basicKind(v2)
 	if err != nil {
 		return false, err
