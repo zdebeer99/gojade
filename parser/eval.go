@@ -374,6 +374,10 @@ func ObjToString(val interface{}) string {
 			del = ";"
 		}
 		return buf.String()
+	case float32:
+		return strconv.FormatFloat(float64(val2), 'g', 15, 32)
+	case float64:
+		return strconv.FormatFloat(val2, 'g', 15, 64)
 	default:
 		return fmt.Sprint(val)
 	}
