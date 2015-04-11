@@ -10,7 +10,7 @@ import (
 )
 
 //create a global variable referencing GoJade
-var jade *gojade.GoJade
+var jade *gojade.Engine
 
 //model, this struct is passed to the jade passed.
 type pageModel struct {
@@ -31,7 +31,7 @@ func index(rw http.ResponseWriter, req *http.Request) {
 func main() {
 
 	//Configure the gojade template engine
-	jade = gojade.NewGoJade()
+	jade = gojade.New()
 	jade.ViewPath = "./views"
 
 	//configure http

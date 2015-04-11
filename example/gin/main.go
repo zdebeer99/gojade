@@ -29,7 +29,7 @@ func index(ctx *gin.Context) {
 func main() {
 
 	//Configure the gojade template engine
-	jade := gojade.NewGoJade()
+	jade := gojade.New()
 	jade.ViewPath = "./views"
 
 	//Setup Gin
@@ -45,7 +45,7 @@ func main() {
 
 // ginRenderJade Wraps GoJade and implements interface gin.render.Render
 type ginRenderJade struct {
-	Template *gojade.GoJade
+	Template *gojade.Engine
 }
 
 // gin.render.Render Required method to render using Gin Context.Html()

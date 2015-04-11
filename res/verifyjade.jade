@@ -671,9 +671,132 @@ else
 <p>Do some maths with x = 5</p><p>x * 2 = 10</p><p>More Maths (x+3)*2</p><p>16</p><p>x is smaller than ten</p>
 @end
 
+@jade Test Array Index 1
+- var x = ["sue","mike","alex"]
+div= x
+div= x[1]
+each item,i in x
+  div
+    span= i
+    span= item    
+@html
+<div>sue mike alex</div><div>mike</div><div><span>0</span><span>sue</span></div><div><span>1</span><span>mike</span></div><div><span>2</span><span>alex</span></div>
+@end
+
+@jade Test index functions 1
+- var person = {name:"ben","age years":32,address:{street:"long str",number:12,town:"Losaka"}}
+div= person.name
+div=person["name"]
+div=person["age years"]
+div=person["address"].street
+div=person["address"]["street"]
+@html
+<div>ben</div><div>ben</div><div>32</div><div>long str</div><div>long str</div>
+@end
+
+
+@jade Test Model Variables
+p= PageTitle
+p number 1 in the int arrays
+p= List[1]
+@html
+<p>Hello Jade</p><p>number 1 in the int arrays</p><p>37</p>
+@end
+
+@jade Test Calling Registered Functions
+//- In this example a function is registered called safeDivide(v1,v2 int) int
+//- This Example tests calling the function and converting the values to correct types.
+p= safeDivide(5,2)
+p= safeDivide(10,0)
+-var point={x:12,y:2}
+p= safeDivide(point.x,point.y)
+p= hello("ben")
+p= number5()
+@html
+<p>2</p><p>0</p><p>6</p><p>Hello ben</p><p>Five</p>
+@end
+
+@jade Test Calling context Functions
+//-
+  Calc0() is a function defined on the main model with no arguments
+  Calc1(arg1) is a function defined on the main model with 1 argument.
+  Person.Born() calculates the year of birth from the Person field on the main model.
+  The main model is the data argument passed to the render method.
+p= Calc0()
+p= Calc1(32)
+p #{Person.Name} is #{Person.Age} years old and was born on #{Person.Born()}
+@html
+<p>50</p><p>1600</p><p>Ben is 32 years old and was born on 1983</p>
+@end
+
+@jade Test ? condinal types
+- var x = 6
+- var y = 0
+- var z = 3
+p #{x}/#{y} = #{y>0?x/y:0}
+p #{x}/#{z} = #{z>0?x/z:0}
+p= y==0?"y is nil"
+p= x?"x is set."
+@html
+<p>6/0 = 0</p><p>6/3 = 2</p><p>y is nil</p><p>x is set.</p>
+@end
+
+@jade Test Mathmatical calculations.
+-var x=5
+-var y=23
+-var z=12.25
+p 1+1  = #{1+1 } (2)
+p -1+2 = #{-1+2} (1)
+p 2-1  = #{2-1 } (1)
+p 1-10  = #{1-10 } (-9)
+p 1+2*3  = #{1+2*3 } (7)
+p 2*3+1  = #{2*3+1 } (7)
+p 2*3/2  = #{2*3/2 } (3)
+p 2/2*3  = #{2/2*3 } (3)
+p 1+2*3/2  = #{1+2*3/2 } (4)
+p -3+1.5*2+5-2*2  = #{-3+1.5*2+5-2*2 } (1)
+p 4+3-2+1  = #{4+3-2+1 } (6)
+p 2-3+4-2  = #{2-3+4-2 } (1)
+p 2.4*3+1.5*2-3.1*4-1+2  = #{2.4*3+1.5*2-3.1*4-1+2 } (-1.2)
+p (1+2)*3  = #{(1+2)*3 } (9)
+p 3*(1+2)  = #{3*(1+2) } (9)
+p 3*(1+2)*4  = #{3*(1+2)*4 } (36)
+p 2*x  = #{2*x } (10)
+p 2*x+y+(z+x)*4  = #{2*x+y+(z+x)*4 } (102)
+p 1+x*(50-y)/z  = #{1+x*(50-y)/z } (12.0204081632653)
+@html
+<p>1+1  = 2 (2)</p><p>-1+2 = 1 (1)</p><p>2-1  = 1 (1)</p><p>1-10  = -9 (-9)</p><p>1+2*3  = 7 (7)</p><p>2*3+1  = 7 (7)</p><p>2*3/2  = 3 (3)</p><p>2/2*3  = 3 (3)</p><p>1+2*3/2  = 4 (4)</p><p>-3+1.5*2+5-2*2  = 1 (1)</p><p>4+3-2+1  = 6 (6)</p><p>2-3+4-2  = 1 (1)</p><p>2.4*3+1.5*2-3.1*4-1+2  = -1.2 (-1.2)</p><p>(1+2)*3  = 9 (9)</p><p>3*(1+2)  = 9 (9)</p><p>3*(1+2)*4  = 36 (36)</p><p>2*x  = 10 (10)</p><p>2*x+y+(z+x)*4  = 102 (102)</p><p>1+x*(50-y)/z  = 12.0204081632653 (12.0204081632653)</p>
+@end
+
+@jade Testing comparison
+each x in 3
+  p #{x}==1 #{x==1}
+  p #{x}>1 #{x>1}
+  p #{x}<1 #{x<1}
+  p #{x}>=1 #{x>=1}
+  p #{x}<=1 #{x<=1}
+@html
+<p>0==1 false</p><p>0>1 false</p><p>0<1 true</p><p>0>=1 false</p><p>0<=1 true</p><p>1==1 true</p><p>1>1 false</p><p>1<1 false</p><p>1>=1 true</p><p>1<=1 true</p><p>2==1 false</p><p>2>1 true</p><p>2<1 false</p><p>2>=1 true</p><p>2<=1 false</p>
+@end
+
+
+@jade Testing build in functions
+p= len("Hello")
+p= upper("Hello")
+p= lower("Hello")
+p= format("Hello %s","Ben")
+-var x=5
+p= isnull(a,"a is nil")
+p= isnull(x,"x is nil")
+@html
+<p>5</p><p>HELLO</p><p>hello</p><p>Hello Ben</p><p>a is nil</p><p>5</p>
+@end
+
+
 @jade
 @html
 @end
+
 
 @jade
 @html

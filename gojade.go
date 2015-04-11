@@ -7,21 +7,21 @@ import (
 	"reflect"
 )
 
-type GoJade struct {
+type Engine struct {
 	ViewPath string
 	Beautify bool
 	extfunc  map[string]reflect.Value
 }
 
-func NewGoJade() *GoJade {
-	gojade := new(GoJade)
+func New() *Engine {
+	gojade := new(Engine)
 	gojade.extfunc = make(map[string]reflect.Value)
 	return gojade
 }
 
 // RenderFile Renders a jade file to a bytes.Buffer.
 // Example: jade.RenderFile("index.jade",nil).String()
-func (this *GoJade) RenderFile(filename string, data interface{}) *bytes.Buffer {
+func (this *Engine) RenderFile(filename string, data interface{}) *bytes.Buffer {
 	buf := new(bytes.Buffer)
 	eval := this.init(buf)
 	eval.SetData(data)
@@ -29,7 +29,7 @@ func (this *GoJade) RenderFile(filename string, data interface{}) *bytes.Buffer 
 	return buf
 }
 
-func (this *GoJade) RenderString(template string, data interface{}) *bytes.Buffer {
+func (this *Engine) RenderString(template string, data interface{}) *bytes.Buffer {
 	buf := new(bytes.Buffer)
 	eval := this.init(buf)
 	eval.SetData(data)
@@ -38,14 +38,14 @@ func (this *GoJade) RenderString(template string, data interface{}) *bytes.Buffe
 }
 
 // RenderFileW Render a jade file to a io.writer stream.
-func (this *GoJade) RenderFileW(wr io.Writer, template string, data interface{}) error {
+func (this *Engine) RenderFileW(wr io.Writer, template string, data interface{}) error {
 	eval := this.init(wr)
 	eval.SetData(data)
 	eval.RenderFile(template)
 	return nil
 }
 
-func (this *GoJade) RegisterFunction(name string, fn interface{}) {
+func (this *Engine) RegisterFunction(name string, fn interface{}) {
 	fnvalue := reflect.ValueOf(fn)
 	switch fnvalue.Kind() {
 	case reflect.Func:
@@ -55,7 +55,7 @@ func (this *GoJade) RegisterFunction(name string, fn interface{}) {
 	}
 }
 
-func (this *GoJade) init(writer io.Writer) *parser.EvalJade {
+func (this *Engine) init(writer io.Writer) *parser.EvalJade {
 	eval := parser.NewEvalJade(writer)
 	eval.SetViewPath(this.ViewPath)
 	eval.Beautify = this.Beautify

@@ -2,15 +2,11 @@
 
 Jade template rendering library for Google Go programing language (golang). GoJade is inspired by the javascript template library http://jade-lang.com/
 
-GoJade renders a jade file directly to HTML. 
+GoJade renders a jade file directly to HTML.
 
-all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is working except for one or two. See status for more details.
+all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is working except for inline tags and filters. See status for more details.
 
 pull request welcomed.
-
-Version: 0.012 Alpha
-
-This library is under development and changes can be expected.
 
 MIT License (MIT)
 
@@ -20,8 +16,9 @@ MIT License (MIT)
 
 **Installing gojade**
 
+
 ```bash
-go get github.com/zdebeer99/gojade 
+go get github.com/zdebeer99/gojade
 ```
 
 
@@ -54,17 +51,17 @@ func main(){
 ```
 
 
-## Jade Examples
+## GoJade Examples
 
-For Example's on using GoJade with go [net/http](http://golang.org/pkg/net/http/) and [gin](https://gin-gonic.github.io/gin/) see the [Example Folder](https://github.com/zdebeer99/gojade/tree/master/example)
+See the [Example Folder](https://github.com/zdebeer99/gojade/tree/master/example)
+folder for examples. Currently the example folder includes;
+* standard go web example - [net/http example](http://golang.org/pkg/net/http/)
+* gin web framework example [gin](https://gin-gonic.github.io/gin/)
 
-
-Examples:
 
 gojade supports math operators, operator precedence, boolean operators and string concatenation.
 
 ```jade
-//- declare a variable called x
 -var x = 5
 p Do some maths with x = 5
 p x * 2 = #{x*2}
@@ -73,7 +70,7 @@ p=(x+3)*2
 //- boolean operations
 if x>=0 && x<10
   p x is smaller than ten
-else 
+else
   p x is equal or larger than 10
 ```
 
@@ -86,14 +83,12 @@ else
 - Filters
 - Tag Interpolation
 
-gojade requires a clean up, some function names and parameters may change. The parser is currently stable but evaluating the parse tree use panic instead of returning the error as a result. This will be fixed to return the error rather than panicking.
+gojade requires a clean up, some function names and parameters may change. The parser is currently stable, evaluating the parse tree use panic instead of returning the error as a value. This will be changed to return the error rather than panicking.
 
 benchmarks and performance improvements has not been done yet.
 
 
 ## Differences between jade and gojade
-
-all examples on http://jade-lang.com/ and http://jade-lang.com/reference/ is working except for one or two. See status for more details.
 
 
 **javascript**
@@ -190,4 +185,4 @@ Built in Functions included is:
 
 
 
-golang jade go jade gojade 
+golang jade go jade gojade

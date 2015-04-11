@@ -16,7 +16,7 @@ type verifyItem struct {
 }
 
 func TestRenderFiles(t *testing.T) {
-	jade := NewGoJade()
+	jade := New()
 	jade.ViewPath = "res"
 	save("res/html/test.html", jade.RenderFile("test", nil).Bytes())
 	//extends
