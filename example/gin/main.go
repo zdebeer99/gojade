@@ -21,7 +21,7 @@ type pageModel struct {
 // Home page handler.
 func index(ctx *gin.Context) {
 	//init model data
-	data := &pageModel{"GoJade Gin Example", "Ben Loveless", 64, []string{"Mike", "Sue", "Jhon"}}
+	data := &pageModel{"GoJade Gin Example", "Ben Lovelace", 64, []string{"Mike", "Sue", "Jhon"}}
 	//render jade page. GoJade will automatically append .jade to a file name is no file extension is specified.
 	ctx.HTML(http.StatusOK, "index", data)
 }

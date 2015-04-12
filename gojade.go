@@ -2,7 +2,7 @@ package gojade
 
 import (
 	"bytes"
-	"github.com/zdebeer99/gojade/parser"
+	"github.com/zdebeer99/gojade/jadeparser"
 	"io"
 	"reflect"
 )
@@ -55,8 +55,8 @@ func (this *Engine) RegisterFunction(name string, fn interface{}) {
 	}
 }
 
-func (this *Engine) init(writer io.Writer) *parser.EvalJade {
-	eval := parser.NewEvalJade(writer)
+func (this *Engine) init(writer io.Writer) *jadeparser.EvalJade {
+	eval := jadeparser.NewEvalJade(writer)
 	eval.SetViewPath(this.ViewPath)
 	eval.Beautify = this.Beautify
 	eval.Extfunc = this.extfunc

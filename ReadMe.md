@@ -55,8 +55,8 @@ func main(){
 
 See the [Example Folder](https://github.com/zdebeer99/gojade/tree/master/example)
 folder for examples. Currently the example folder includes;
-* standard go web example - [net/http example](http://golang.org/pkg/net/http/)
-* gin web framework example [gin](https://gin-gonic.github.io/gin/)
+* standard [net/http example](http://golang.org/pkg/net/http/) go web example.
+* [gin](https://gin-gonic.github.io/gin/) web framework example.
 
 
 gojade supports math operators, operator precedence, boolean operators and string concatenation.
@@ -78,7 +78,7 @@ else
 ## Status
 
 
-**Whats is out standing**
+**What is out standing**
 
 - Filters
 - Tag Interpolation
@@ -97,7 +97,7 @@ Keep in mind that gojade does not run in a javascript environment, because of th
 
 Registering Custom Functions.
 ```go
-jade:=NewGoJade()
+jade:=gojade.New()
 // Register a function called hello, that can be used in your jade template
 jade.RegisterFunction("hello", func(name string){return "Hello"+name})
 ```
@@ -106,7 +106,7 @@ Using the function in your jade.
 ```jade
 p= hello("Ben")
 ```
-
+methods defined on the model struct passed to the render function is also accessible from jade.
 
 **variable names**
 
@@ -159,7 +159,7 @@ Defining a variable using var
   p This content is outside of SomeGoFunctions scope.
 ```
 
-[may change] a unbuffered function must take either a string or a *TreeNode as the last argument. the content below the unbeffered function will be passed to the function. If the function takes a string the content will first be parsed and then passed to the function.
+[may change] a unbuffered function must take either a string or a *TreeNode as the last argument. the content below the unbuffered function will be passed to the function. If the function takes a string the content will first be parsed and then passed to the function.
 
 
 ## Useful functions

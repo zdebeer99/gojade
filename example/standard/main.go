@@ -23,7 +23,7 @@ type pageModel struct {
 // Home page handler.
 func index(rw http.ResponseWriter, req *http.Request) {
 	//init model data
-	data := &pageModel{"GoJade http Example", "Glen Loveless", 32, []string{"Joe", "Marco", "Mimi"}}
+	data := &pageModel{"GoJade http Example", "Glen Lovelace", 32, []string{"Joe", "Marco", "Mimi"}}
 	//render jade page. GoJade will automatically append .jade to a file name if no file extension is specified.
 	jade.RenderFileW(rw, "index", data)
 }
