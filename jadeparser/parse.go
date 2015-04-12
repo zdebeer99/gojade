@@ -68,11 +68,11 @@ func (this *parser) newNode(value Token) *TreeNode {
 }
 
 func (this *parser) add(token Token) *TreeNode {
-	return this.curr.Add(token)
+	return this.curr.AddElement(this.newNode(token))
 }
 
 func (this *parser) push(token Token) *TreeNode {
-	return this.curr.Push(token)
+	return this.curr.PushElement(this.newNode(token))
 }
 
 func (this *parser) lastNode() *TreeNode {
@@ -92,7 +92,7 @@ func (this *parser) stack(token Token) *TreeNode {
 		//panic("Cannot stack on node with no children")
 		return this.add(token)
 	}
-	return lnode.Add(token)
+	return lnode.AddElement(this.newNode(token))
 }
 
 // unstack sets the current node to some parent
@@ -107,12 +107,14 @@ func (this *parser) unstack(lvl int) {
 }
 
 func (this *parser) replace(value Token) *TreeNode {
+	this.curr.Pos = this.scan.Position()
 	this.curr.Value = value
 	return this.curr
 }
 
 func (this *parser) replaceNode(node *TreeNode) *TreeNode {
 	this.curr = this.curr.ReplaceNode(node)
+	this.curr.Pos = this.scan.Position()
 	return this.curr
 }
 
@@ -309,7 +311,7 @@ func (this *parser) parseOperator() bool {
 		//change order for */ presedence
 		if onode.Precedence(operator) > 0 {
 			if lastnode != nil {
-				this.curr = lastnode.Push(NewOperatorToken(operator))
+				this.curr = lastnode.PushElement(this.newNode(NewOperatorToken(operator)))
 				return true
 			}
 		}
@@ -330,7 +332,7 @@ func (this *parser) parseOperator() bool {
 	}
 	//set previous found value as argument of the operator
 	if lastnode != nil {
-		this.curr = lastnode.Push(NewOperatorToken(operator))
+		this.curr = lastnode.PushElement(this.newNode(NewOperatorToken(operator)))
 	} else {
 		this.error(fmt.Sprintf("Expecting a value before operator %q", operator))
 		this.state = nil
@@ -343,7 +345,7 @@ func (this *parser) parseLRFunc() bool {
 	lrfunc := this.commit()
 	lastnode := this.lastNode()
 	if lastnode != nil {
-		this.curr = lastnode.Push(NewLRFuncToken(lrfunc))
+		this.curr = lastnode.PushElement(this.newNode(NewLRFuncToken(lrfunc)))
 	} else {
 		this.error(fmt.Sprintf("Expecting a value before operator %q", lrfunc))
 		this.state = nil
@@ -448,14 +450,14 @@ loop1:
 				switch key := expr.items[0].Value.(type) {
 				case *FuncToken:
 					if key.IsIdentity {
-						group.Add(NewKeyValueToken(key.Name, expr.items[1]))
+						group.AddElement(this.newNode(NewKeyValueToken(key.Name, expr.items[1])))
 					} else {
 						panic("Expecting key name, found function.")
 					}
 				case *TextToken:
-					group.Add(NewKeyValueToken(key.Text, expr.items[1]))
+					group.AddElement(this.newNode(NewKeyValueToken(key.Text, expr.items[1])))
 				case *NumberToken:
-					group.Add(NewKeyValueToken(strconv.FormatFloat(key.Value, byte('f'), -1, 64), expr.items[1]))
+					group.AddElement(this.newNode(NewKeyValueToken(strconv.FormatFloat(key.Value, byte('f'), -1, 64), expr.items[1])))
 				default:
 					this.error("Invalid Key Value in Map, expicting json syntax of the form {name:value,name:value} found " + expr.items[0].String())
 					break loop1

@@ -13,6 +13,7 @@ func (this *EvalJade) registerStandardFunctions() {
 	registerFunction(this.builtin, "lower", lower)
 	registerFunction(this.builtin, "format", format)
 	registerFunction(this.builtin, "isnull", isnull)
+	registerFunction(this.builtin, "ifnull", ifnull)
 }
 
 func length(value interface{}) int {
@@ -32,7 +33,14 @@ func format(txt string, args ...interface{}) string {
 	return fmt.Sprintf(txt, args...)
 }
 
-func isnull(value, result interface{}) interface{} {
+func isnull(value interface{}) bool {
+	if value == nil {
+		return true
+	}
+	return false
+}
+
+func ifnull(value, result interface{}) interface{} {
 	if value == nil {
 		return result
 	}

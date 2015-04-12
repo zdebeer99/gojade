@@ -1,6 +1,6 @@
 # GoJade
 
-Jade template rendering library for Google Go programing language (golang). GoJade is inspired by the javascript template library http://jade-lang.com/
+Jade template rendering library for the Go programing language (golang). GoJade is inspired by the javascript template library http://jade-lang.com/
 
 GoJade renders a jade file directly to HTML.
 
@@ -83,7 +83,9 @@ else
 - Filters
 - Tag Interpolation
 
-gojade requires a clean up, some function names and parameters may change. The parser is currently stable, evaluating the parse tree use panic instead of returning the error as a value. This will be changed to return the error rather than panicking.
+gojade requires a clean up, some function names and parameters may change.
+
+debug information can be improved.
 
 benchmarks and performance improvements has not been done yet.
 
@@ -154,13 +156,11 @@ Defining a variable using var
 [Planned] Calling Unbuffered Functions defined in go.
 
 ```jade
+//Future Implementation, not done yet.
 - SomeGoFunction(5,64)
   p This Content will be passed to the last argument of SomeGoFunction()
   p This content is outside of SomeGoFunctions scope.
 ```
-
-[may change] a unbuffered function must take either a string or a *TreeNode as the last argument. the content below the unbuffered function will be passed to the function. If the function takes a string the content will first be parsed and then passed to the function.
-
 
 ## Useful functions
 
@@ -180,6 +180,10 @@ Built in Functions included is:
 * lower(string)
 
 * format(string,args...) - the same as fmt.SPrintf() in go
+
+* isnull(value) bool
+
+* ifnull(value, replace) - returns replace if value is nil else it returns value
 
 * more is planned, suggestions is welcomed.
 

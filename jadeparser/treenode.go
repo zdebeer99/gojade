@@ -66,10 +66,10 @@ func (this *TreeNode) AddElement(element *TreeNode) *TreeNode {
 }
 
 // Add adds a value to the end of the children items of the current node.
-func (this *TreeNode) Add(value Token) *TreeNode {
-	element := NewTreeNode(value)
-	return this.AddElement(element)
-}
+//func (this *TreeNode) Add(value Token) *TreeNode {
+//	element := NewTreeNode(value)
+//	return this.AddElement(element)
+//}
 
 // Push, removes the current element from its current parent, place the new value
 // in its place and add the current element to the new element. there by pushing the current
@@ -92,9 +92,9 @@ func (this *TreeNode) PushElement(element *TreeNode) *TreeNode {
 	return element
 }
 
-func (this *TreeNode) Push(value Token) *TreeNode {
-	return this.PushElement(NewTreeNode(value))
-}
+//func (this *TreeNode) Push(value Token) *TreeNode {
+//	return this.PushElement(NewTreeNode(value))
+//}
 
 func (this *TreeNode) ReplaceNode(node *TreeNode) *TreeNode {
 	node.parent = this.parent
@@ -169,4 +169,8 @@ func printOperator(node *TreeNode, operator *OperatorToken) string {
 	}
 	str += ")"
 	return str
+}
+
+func findNodeWithPos(node *TreeNode) {
+
 }

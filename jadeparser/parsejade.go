@@ -389,14 +389,14 @@ func (this *parser) parseMultilineContent() {
 		//			return
 		//		}
 		if scan.IsEOF() {
-			node.Add(NewTextToken(buf.String()))
+			node.AddElement(this.newNode(NewTextToken(buf.String())))
 			break
 		}
 		if scan.AcceptNewLine() {
 			start = scan.Position()
 			lvl := this.getIndent()
 			if lvl <= contentIndent && lvl > -1 {
-				node.Add(NewTextToken(buf.String()))
+				node.AddElement(this.newNode(NewTextToken(buf.String())))
 				scan.SetStartPosition(start)
 				scan.SetPosition(start)
 				break
@@ -413,14 +413,14 @@ func (this *parser) parseMultilineContent() {
 		}
 		if this.scan.Prefix("#{") || this.scan.Prefix("!{") {
 			escape := this.commit() == "#{"
-			node.Add(NewTextToken(buf.String()))
+			node.AddElement(this.newNode(NewTextToken(buf.String())))
 			buf.Reset()
 			expr := this.parseExpression()
 			if expr != nil {
 				if escape {
 					fnescapeHtml := NewFuncToken(escapeHtmlFunc)
 					fnescapeHtml.AddArgument(expr)
-					node.Add(fnescapeHtml)
+					node.AddElement(this.newNode(fnescapeHtml))
 				} else {
 					node.AddElement(expr)
 				}
@@ -650,7 +650,7 @@ func (this *parser) getContent() *TreeNode {
 				this.error("Missing closing handlebar '}'")
 			}
 			this.ignore()
-			node.Add(NewTextToken(buf.String()))
+			node.AddElement(this.newNode(NewTextToken(buf.String())))
 			break
 		}
 		if this.scan.Prefix("#{") || this.scan.Prefix("!{") {
@@ -660,7 +660,7 @@ func (this *parser) getContent() *TreeNode {
 				this.error("Not expecting " + codePrefix + " inside of a code section.")
 				break
 			}
-			node.Add(NewTextToken(buf.String()))
+			node.AddElement(this.newNode(NewTextToken(buf.String())))
 			buf.Reset()
 			inCode = true
 		}
@@ -671,7 +671,7 @@ func (this *parser) getContent() *TreeNode {
 				if escape {
 					fnescapeHtml := NewFuncToken(escapeHtmlFunc)
 					fnescapeHtml.AddArgument(expr)
-					node.Add(fnescapeHtml)
+					node.AddElement(this.newNode(fnescapeHtml))
 				} else {
 					node.AddElement(expr)
 				}

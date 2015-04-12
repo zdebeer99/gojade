@@ -6,17 +6,18 @@ import (
 )
 
 type EvalJade struct {
-	Loader   TemplateLoader
-	data     reflect.Value
-	builtin  map[string]reflect.Value
-	Extfunc  map[string]reflect.Value
-	writer   *jadewriter
-	doctype  string
-	stack    *ContextStack
-	Blocks   map[string]*TreeNode
-	Mixins   map[string]*TreeNode
-	Beautify bool
-	Log      []string
+	Loader       TemplateLoader
+	currTemplate *Template //Used for debugging purposes.
+	data         reflect.Value
+	builtin      map[string]reflect.Value
+	Extfunc      map[string]reflect.Value
+	writer       *jadewriter
+	doctype      string
+	stack        *ContextStack
+	Blocks       map[string]*TreeNode
+	Mixins       map[string]*TreeNode
+	Beautify     bool
+	Log          []string
 }
 
 func NewEvalJade(wr io.Writer) *EvalJade {
@@ -70,9 +71,11 @@ func (this *EvalJade) RenderFile(filename string) {
 	if template.Template == nil {
 		return
 	}
-	for len(template.Template.Extends) > 0 {
+	if len(template.Template.Extends) > 0 {
 		template = this.evalFile(template.Template.Extends)
 	}
+	this.currTemplate = template
+
 	this.Exec(template.Template.Root)
 }
 
@@ -83,6 +86,7 @@ func (this *EvalJade) RenderString(template string) {
 	for len(parse.Extends) > 0 {
 		this.RenderFile(parse.Extends)
 	}
+	this.currTemplate = &Template{Name: "na", File: []byte(template), Template: parse, IsJade: true}
 	this.Exec(parse.Root)
 	return
 }

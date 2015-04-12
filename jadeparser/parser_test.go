@@ -67,6 +67,18 @@ func TestEvalExtends(t *testing.T) {
 	}
 }
 
+// Test parsing jade extends functions.
+func TestEvalExpressions(t *testing.T) {
+	buf := new(bytes.Buffer)
+	eval := NewEvalJade(buf)
+	eval.SetData(map[string]int{"x": 5, "y": 2, "youAreUsingJade": 1})
+	eval.SetViewPath("../res")
+	eval.RenderFile("expressions.jade")
+	if strings.Contains(buf.String(), "Error") {
+		t.Error("Found the word 'Error' in Html:\n" + buf.String())
+	}
+}
+
 type VerifyStruct struct {
 	PageTitle       string
 	YouAreUsingJade bool
