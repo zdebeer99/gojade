@@ -15,5 +15,5 @@ func (this *templateLoader) Load(name string) *jadeparser.Template {
 	if err != nil {
 		panic(err)
 	}
-	return &jadeparser.Template{Raw: b}
+	return &jadeparser.Template{File: b}
 }

@@ -329,13 +329,13 @@ func (this *EvalJade) getText(node *TreeNode) string {
 func ObjToString(val interface{}) string {
 	switch val2 := val.(type) {
 	case reflect.Value:
+		if !val2.IsValid() {
+			return ""
+		}
 		if val2.Type().AssignableTo(nilValueType) {
 			return ""
 		}
-		if val2.IsValid() {
-			return ObjToString(val2.Interface())
-		}
-		return ""
+		return ObjToString(val2.Interface())
 	case string:
 		return val2
 	case []interface{}:
@@ -447,7 +447,7 @@ func (this *EvalJade) findIdentityValue(rval reflect.Value, identity *FuncToken,
 
 func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result reflect.Value, err error) {
 	if !rval.IsValid() {
-		err = fmt.Errorf("Invalid Variable. '%s'", name)
+		//err = fmt.Errorf("Invalid Variable. '%s'", name)
 		result = newNilValue(name, "Parent Object nil")
 		return
 	}
@@ -459,6 +459,7 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 			result = newNilValue(name, "Variable Not Found")
 			err = VariableNotDefined{fmt.Errorf("Variable %q not defined on map", name)}
 		}
+		result = toBasicReflectValue(result, name)
 		return
 	case reflect.Array, reflect.Slice:
 		result = rval.Index(getIdentityIndex(rval, name))
@@ -466,6 +467,7 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 			result = newNilValue(name, "Invalid Index")
 			err = fmt.Errorf("Invalid Index %q on %s", name, rval)
 		}
+		result = toBasicReflectValue(result, name)
 		return
 	case reflect.Struct:
 		result = rval.FieldByName(name)
@@ -473,6 +475,7 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 			result = newNilValue(name, "Variable Not Defined")
 			err = VariableNotDefined{fmt.Errorf("Variable %q not defined on struct.", name)}
 		}
+		result = toBasicReflectValue(result, name)
 		return
 	case reflect.Interface, reflect.Ptr:
 		//Handle LinearMap struct
@@ -895,6 +898,9 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 		// Something like var x interface{}, never set. It's a form of nil.
 		return false, true
 	}
+	if isNullValue(val) {
+		return false, true
+	}
 	switch val.Kind() {
 	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
 		truth = val.Len() > 0
@@ -915,6 +921,7 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 	default:
 		return
 	}
+	fmt.Println("IsTRUE Called", truth, val.Kind())
 	return truth, true
 }
 
@@ -941,6 +948,31 @@ func toReflectValue(value interface{}) reflect.Value {
 	}
 }
 
+func toBasicReflectValue(value reflect.Value, name string) reflect.Value {
+	if !value.IsValid() {
+		return newNilValue(name, "")
+	}
+	switch value.Kind() {
+	case reflect.Interface:
+		return value.Elem()
+	}
+	return value
+}
+
 func newNilValue(name string, reason string) reflect.Value {
 	return reflect.ValueOf(nilValue{name, reason})
+}
+
+func isNullValue(value reflect.Value) bool {
+	if !value.IsValid() {
+		return true
+	}
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Ptr, reflect.Interface:
+		return value.IsNil()
+	case reflect.Struct:
+		return value.Type().AssignableTo(nilValueType)
+	default:
+		return false
+	}
 }

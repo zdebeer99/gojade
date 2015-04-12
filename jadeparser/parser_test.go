@@ -14,27 +14,10 @@ import (
 // Set testonly to a test number to only test that example.
 var testonly int = -1
 
-type VerifyStruct struct {
-	PageTitle       string
-	YouAreUsingJade bool
-	Num1            int
-	Num2            int
-	List            []int
-	Person          *PersonModel
-}
-
-func (this *VerifyStruct) Calc1(Num3 int) int {
-	return this.Num1 * this.Num2 * Num3
-}
-
-func (this *VerifyStruct) Calc0() int {
-	return this.Num1 * this.Num2
-}
-
 // Test Samples in file delimited by @jade, @html keywords. see 'verifyjade.jade' for example.
 func TestVerifyJade(t *testing.T) {
-	data := &VerifyStruct{"Hello Jade", true, 5, 10, []int{32, 37, 38, 42}, &PersonModel{"Ben", 32}}
-	content, err := Load("../res/verifyjade.jade")
+	data := &VerifyStruct{"Hello Jade", false, 5, 10, []int{32, 37, 38, 42}, &PersonModel{"Ben", 32}}
+	content, err := load("../res/verifyjade.jade")
 	if err != nil {
 		t.Errorf("Error loading file for testing. %v", err)
 		return
@@ -61,7 +44,7 @@ func TestVerifyJade(t *testing.T) {
 
 // Render Jade file found on jade-lang home page.
 func TestParseJade(t *testing.T) {
-	template, err := Load("../res/test.jade")
+	template, err := load("../res/test.jade")
 	if err != nil {
 		t.Error(err)
 		return
@@ -71,60 +54,6 @@ func TestParseJade(t *testing.T) {
 		fmt.Println(result.Err)
 	}
 	//fmt.Println(result.Root)
-}
-
-type testTemplateData struct {
-	PageTitle       string
-	YouAreUsingJade bool
-	Person          PersonModel
-	Children        []string
-}
-
-type PersonModel struct {
-	Name string
-	Age  int
-}
-
-func (this *PersonModel) Born() int {
-	return time.Now().Year() - this.Age
-}
-
-func (this *testTemplateData) Hello() string {
-	return "Hello GoJade"
-}
-
-// Test parsing and evaluating jade.
-func _TestDataMap(t *testing.T) {
-	template, err := Load("../res/test.jade")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	buf := new(bytes.Buffer)
-	//test using map
-	data := map[string]interface{}{
-		"PageTitle":       "Hello Jade",
-		"YouAreUsingJade": true,
-		"Person":          PersonModel{"ben", 32},
-		"Children":        []string{"sue", "mike", "alex"},
-	}
-	result := Parse(template)
-	fmt.Println(result.Root)
-	renderJade(buf, template, data)
-	fmt.Println(buf.String())
-}
-
-// Test parsing and evaluating jade.
-func _TestDataStruct(t *testing.T) {
-	template, err := Load("../res/test.jade")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	buf := new(bytes.Buffer)
-	data := &testTemplateData{"Hello Jade", true, PersonModel{"ben", 32}, []string{"sue", "mike", "alex"}}
-	renderJade(buf, template, data)
-	//fmt.Println(buf.String(), j.Log)
 }
 
 // Test parsing jade extends functions.
@@ -138,6 +67,32 @@ func TestEvalExtends(t *testing.T) {
 	}
 }
 
+type VerifyStruct struct {
+	PageTitle       string
+	YouAreUsingJade bool
+	Num1            int
+	Num2            int
+	List            []int
+	Person          *PersonModel
+}
+
+func (this *VerifyStruct) Calc1(Num3 int) int {
+	return this.Num1 * this.Num2 * Num3
+}
+
+func (this *VerifyStruct) Calc0() int {
+	return this.Num1 * this.Num2
+}
+
+type PersonModel struct {
+	Name string
+	Age  int
+}
+
+func (this *PersonModel) Born() int {
+	return time.Now().Year() - this.Age
+}
+
 // store jade and html result for comparison.
 type verifyItem struct {
 	name string
@@ -146,7 +101,7 @@ type verifyItem struct {
 }
 
 // Load a test file
-func Load(filename string) (string, error) {
+func load(filename string) (string, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return "", err
@@ -155,7 +110,7 @@ func Load(filename string) (string, error) {
 }
 
 // Save a test result
-func Save(filename string, data []byte) {
+func save(filename string, data []byte) {
 	ioutil.WriteFile(filename, data, os.ModePerm)
 }
 
