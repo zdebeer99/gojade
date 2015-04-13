@@ -62,8 +62,9 @@ func TestEvalExtends(t *testing.T) {
 	eval := NewEvalJade(buf)
 	eval.SetViewPath("../res/extends")
 	eval.RenderFile("index.jade")
-	if buf.String() != "<!DOCTYPE html><html><head><title>Article Title</title></head><body></body><h1>This Part is from the layout.jade file</h1><h2>This is from index.jade</h2></html>" {
-		t.Error("Html does not match")
+	html := "<!DOCTYPE html><html><head><title>Article Title</title></head><body></body><h1>This Part is from the layout.jade file</h1><h2>This is from index.jade</h2></html>"
+	if buf.String() != html {
+		t.Errorf("Html does not match:\nExpected:\n%s\nParsedTo:\n%s", html, buf.String())
 	}
 }
 

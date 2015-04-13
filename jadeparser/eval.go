@@ -174,44 +174,47 @@ func (this *EvalJade) escapeHtml(val *TreeNode) string {
 	return html.EscapeString(this.getText(val))
 }
 
-func (this *EvalJade) jadeBlock(blockfn *FuncToken) {
+func (this *EvalJade) jadeBlock(node *TreeNode, blockfn *FuncToken) {
 	blockname := ""
 	if len(blockfn.Arguments) > 0 {
 		if bname, ok := blockfn.Arguments[0].Value.(*FuncToken); ok {
 			blockname = bname.Name
 		}
 	}
-	var block *TreeNode
+	var block *jadePart
 	if len(blockname) == 0 {
 		//mixin block has no name an is stored in the stack.
 		if blockvar, ok := this.stack.GetOk("block"); ok {
-			block = blockvar.Interface().(*TreeNode)
+			block = &jadePart{"", blockvar.Interface().(*TreeNode), this.currTemplate.File}
 		}
 	} else {
 		//normal page blocks has a name and is stored in the page
 		block = this.Blocks[blockname]
 	}
 	if block == nil {
-		panic("Block '" + blockname + "' not found.")
+		this.errorf(node, "Block %q not found.", blockname)
 	}
-	this.evalContent(block)
+	this.currPart = block
+	this.evalContent(block.Part)
+	this.currPart = nil
 }
 
 func (this *EvalJade) jadeMixin(val *TreeNode, token *FuncToken) string {
 	fn, ok := token.Arguments[0].Value.(*FuncToken)
 	if !ok {
-		panic("Expecting mixin function call.")
+		this.errorf(val, "Expecting mixin function call.")
 	}
 	mixindef, ok := this.Mixins[fn.Name]
 	if !ok {
-		panic("Mixin '" + fn.Name + "' not found.")
+		this.errorf(val, "Mixin %q not found.", fn.Name)
 	}
-
+	this.currPart = mixindef
 	this.stack.AddLayer()
 	defer this.stack.DropLayer()
 
 	//set context
-	if fnplaceholder, ok := mixindef.Value.(*FuncToken); ok {
+	mixinfn := mixindef.Part
+	if fnplaceholder, ok := mixinfn.Value.(*FuncToken); ok {
 		if fndef, ok := fnplaceholder.Arguments[0].Value.(*FuncToken); ok && !fndef.IsIdentity {
 			for i, arg := range fndef.Arguments {
 				argidentity := arg.Value.(*FuncToken)
@@ -236,9 +239,8 @@ func (this *EvalJade) jadeMixin(val *TreeNode, token *FuncToken) string {
 	if len(val.Items()) > 0 {
 		this.stack.Set("block", val)
 	}
-
-	this.evalContent(mixindef)
-
+	this.evalContent(mixinfn)
+	this.currPart = nil
 	return ""
 }
 
@@ -662,10 +664,12 @@ func (this *EvalJade) evalFunc(node *TreeNode, token *FuncToken) reflect.Value {
 	case jadeMixinFunc:
 		return toReflectValue(this.jadeMixin(node, token))
 	case jadeBlockFunc:
-		this.jadeBlock(token)
+		this.jadeBlock(node, token)
 		return EmptyString
 	case "include":
 		this.jadeInclude(token)
+		return EmptyString
+	case "extends":
 		return EmptyString
 	}
 	fn := this.findFunction(token.Name)
@@ -679,7 +683,12 @@ func (this *EvalJade) evalFunc(node *TreeNode, token *FuncToken) reflect.Value {
 func (this *EvalJade) evalFile(filename string) *Template {
 	template := this.Loader.Load(filename)
 	if template.IsJade {
-		this.BuildJadeFromParseResult(template.Template)
+		this.buildJadeFromParseResult(template)
+		if len(template.Root.Extends) > 0 {
+			return this.evalFile(template.Root.Extends)
+		}
+		this.currTemplate = template
+		this.Exec(template.Root.Root)
 	} else {
 		this.writeText(string(template.File))
 	}
@@ -814,12 +823,16 @@ func basicKind(v reflect.Value) (kind, error) {
 // errorf formats the error and terminates processing.
 func (this *EvalJade) errorf(node *TreeNode, format string, args ...interface{}) {
 	err := ""
-	if this.currTemplate != nil {
+	if this.currPart != nil {
+		err = fmt.Sprintf("Template %q ", this.currPart.Name)
+		if node != nil {
+			err += fmt.Sprintf("Linenumber %v ", LineNumber(string(this.currPart.File), node.Pos))
+		}
+	} else if this.currTemplate != nil {
 		err = fmt.Sprintf("Template %q ", this.currTemplate.Name)
-	}
-	if node != nil {
-		fmt.Println("POS", node.Pos, node)
-		err += fmt.Sprintf("Linenumber %v ", this.LineNumber(node.Pos))
+		if node != nil {
+			err += fmt.Sprintf("Linenumber %v ", LineNumber(string(this.currTemplate.File), node.Pos))
+		}
 	}
 	//	name := doublePercent(s.tmpl.Name())
 	//	if s.node == nil {
@@ -831,12 +844,12 @@ func (this *EvalJade) errorf(node *TreeNode, format string, args ...interface{})
 	panic(fmt.Errorf(err+format, args...))
 }
 
-func (this *EvalJade) LineNumber(pos int) int {
-	if this.currTemplate == nil {
-		return -1
+func LineNumber(source string, pos int) int {
+	if pos < len(source) {
+		return 1 + strings.Count(source[:pos], "\n")
+	} else {
+		return 1 + strings.Count(source, "\n")
 	}
-	txt := string(this.currTemplate.File)
-	return 1 + strings.Count(txt[:pos], "\n")
 }
 
 // validateType guarantees that the value is valid and assignable to the type.

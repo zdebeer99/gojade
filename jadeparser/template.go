@@ -7,10 +7,16 @@ import (
 )
 
 type Template struct {
-	Name     string
-	File     []byte
-	Template *ParseResult
-	IsJade   bool
+	Name   string
+	File   []byte
+	Root   *ParseResult
+	IsJade bool
+}
+
+type jadePart struct {
+	Name string
+	Part *TreeNode
+	File []byte
 }
 
 type TemplateLoader interface {
@@ -42,7 +48,7 @@ func (this *templateLoader) Load(name string) *Template {
 
 	if this.isJadeFile(filename) {
 		template.IsJade = true
-		template.Template = Parse(string(template.File))
+		template.Root = Parse(string(template.File))
 		return template
 	} else {
 		template.IsJade = false

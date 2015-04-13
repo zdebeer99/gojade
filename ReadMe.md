@@ -41,7 +41,7 @@ import (
 
 func main(){
   //GoJade can be declared globally. it will cache templates and keep config information for parsing.
-  jade:=gojade.NewGoJade()
+  jade:=gojade.New()
   jade.ViewPath = "./view"
 
   //RenderFile renders a jade file into html.
