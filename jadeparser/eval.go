@@ -57,6 +57,38 @@ func (this *EvalJade) warning(warning string, node *TreeNode, args ...interface{
 	this.Log = append(this.Log, fmt.Sprintf("Warning: "+warning, args...))
 }
 
+// errorf formats the error and terminates processing.
+func (this *EvalJade) errorf(node *TreeNode, format string, args ...interface{}) {
+	err := ""
+	if this.currPart != nil {
+		err = fmt.Sprintf("Template %q ", this.currPart.Name)
+		if node != nil {
+			err += fmt.Sprintf("Linenumber %v ", LineNumber(string(this.currPart.File), node.Pos))
+		}
+	} else if this.currTemplate != nil {
+		err = fmt.Sprintf("Template %q ", this.currTemplate.Name)
+		if node != nil {
+			err += fmt.Sprintf("Linenumber %v ", LineNumber(string(this.currTemplate.File), node.Pos))
+		}
+	}
+	//	name := doublePercent(s.tmpl.Name())
+	//	if s.node == nil {
+	//		format = fmt.Sprintf("template: %s: %s", name, format)
+	//	} else {
+	//		location, context := s.tmpl.ErrorContext(s.node)
+	//		format = fmt.Sprintf("template: %s: executing %q at <%s>: %s", location, name, doublePercent(context), format)
+	//	}
+	panic(fmt.Errorf(err+format, args...))
+}
+
+func LineNumber(source string, pos int) int {
+	if pos < len(source) {
+		return 1 + strings.Count(source[:pos], "\n")
+	} else {
+		return 1 + strings.Count(source, "\n")
+	}
+}
+
 func (this *EvalJade) router(node *TreeNode) {
 	writer := this.writer
 	switch val := node.Value.(type) {
@@ -102,7 +134,7 @@ func (this *EvalJade) getValue(node *TreeNode) reflect.Value {
 	case *FuncToken:
 		return this.evalFunc(node, val)
 	default:
-		panic(fmt.Errorf("Invalid Type, Cannot get value of token type %T.", val))
+		this.errorf(node, "Invalid Type, Cannot get value of token type %T.", val)
 	}
 	return toReflectValue(result)
 }
@@ -120,7 +152,7 @@ func (this *EvalJade) getGroup(node *TreeNode, group *GroupToken) reflect.Value 
 			if kv, ok := item.Value.(*KeyValueToken); ok {
 				result.Set(kv.Key, this.getValue(kv.Value).Interface())
 			} else {
-				panic("Invalid Map item. All items in a map must be of type KeyValueTokens. found " + item.String())
+				this.errorf(node, "Invalid Map item. All items in a map must be of type KeyValueTokens. found %s", item.String())
 			}
 		}
 		return toReflectValue(result)
@@ -134,7 +166,7 @@ func (this *EvalJade) getGroup(node *TreeNode, group *GroupToken) reflect.Value 
 	}
 	if group.GroupType == "()" {
 		if len(node.items) != 1 {
-			panic("Math Function Should have 1 operator in the tree")
+			this.errorf(node, "Math Function Should have 1 operator in the tree")
 		}
 		return this.getValue(node.items[0])
 	}
@@ -246,43 +278,34 @@ func (this *EvalJade) jadeMixin(val *TreeNode, token *FuncToken) string {
 
 func (this *EvalJade) jadeEach(node *TreeNode, fn *FuncToken) {
 	if len(fn.Arguments) != 3 {
-		panic("each statement does not have the right number of arguments. Example each value,[index] in array. found " + string(len(fn.Arguments)))
+		this.errorf(node, "each statement invalid number of arguments, expecting at least 2. found %v", len(fn.Arguments))
 	}
 	var ivalue, index string
 	if varvalue, ok := fn.Arguments[0].Value.(*FuncToken); ok && varvalue.IsIdentity {
 		ivalue = varvalue.Name
 	} else {
-		panic("First argument of 'each' keyword must be a variable name.")
+		this.errorf(node, "First argument of 'each' keyword must be a variable name.")
 	}
 	if _, ok := fn.Arguments[1].Value.(*EmptyToken); ok {
 		index = ""
 	} else if varvalue, ok := fn.Arguments[1].Value.(*FuncToken); ok && varvalue.IsIdentity {
 		index = varvalue.Name
 	} else {
-		panic("Second argument of 'each' keyword must be a variable name or left blank.")
+		this.errorf(node, "Second argument of 'each' keyword must be a variable name or left blank.")
 	}
 
 	this.stack.AddLayer()
 	defer this.stack.DropLayer()
 
-	array := this.getValue(fn.Arguments[2]).Interface()
-
+	arrayValue := this.getValue(fn.Arguments[2])
+	if !arrayValue.IsValid() {
+		this.errorf(node, "value '%s' after 'each in' cannot be nil. ", fn.Arguments[2])
+	}
+	array := arrayValue.Interface()
 	if array == nil {
-		panic(fmt.Sprintf("value '%s' after 'each in' not found. ", fn.Arguments[2]))
-	}
-	//handle iterating jsondata object
-	if val1, ok := array.(*LinearMap); ok {
-		for _, k := range val1.keys {
-			if len(index) > 0 {
-				this.stack.Set(index, k)
-			}
-			this.stack.Set(ivalue, val1.Get(k))
-			this.evalContent(node)
-		}
-		return
+		this.errorf(node, "value '%s' after 'each in' not found. ", fn.Arguments[2])
 	}
 
-	arrayValue := toReflectValue(array)
 	switch arrayValue.Kind() {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < arrayValue.Len(); i++ {
@@ -303,6 +326,19 @@ func (this *EvalJade) jadeEach(node *TreeNode, fn *FuncToken) {
 			this.stack.Set(ivalue, itemvalue)
 			this.evalContent(node)
 		}
+	case reflect.Ptr:
+		//handle iterating jsondata object
+		if val1, ok := array.(*LinearMap); ok {
+			for _, k := range val1.keys {
+				if len(index) > 0 {
+					this.stack.Set(index, k)
+				}
+				this.stack.Set(ivalue, val1.Get(k))
+				this.evalContent(node)
+			}
+			return
+		}
+		this.errorf(node, "Invalid value type after 'in' keyword, expecting an array, map or number found %s", arrayValue.Kind())
 	case reflect.Float64:
 		cnt := int(arrayValue.Float())
 		for i := 0; i < cnt; i++ {
@@ -310,7 +346,7 @@ func (this *EvalJade) jadeEach(node *TreeNode, fn *FuncToken) {
 			this.evalContent(node)
 		}
 	default:
-		panic(fmt.Sprintf("Expecting an Array or Map after 'in' keyword. found %s", array))
+		this.errorf(node, "Invalid value type after 'in' keyword, expecting an array, map or number found %s", arrayValue.Kind())
 	}
 }
 
@@ -398,7 +434,7 @@ func (this *EvalJade) getIdentityValue(node *TreeNode, token Token) (reflect.Val
 				this.warning("%s on %q", node, err.Error(), identity.String())
 				return reflect.Value{}, false
 			}
-			panic(fmt.Errorf("Varaible Error '%s': %s", identity.String(), err.Error()))
+			this.errorf(node, "Varaible Error '%s': %s", identity.String(), err.Error())
 		}
 		if !val1.IsValid() {
 			return reflect.Value{}, false
@@ -410,8 +446,9 @@ func (this *EvalJade) getIdentityValue(node *TreeNode, token Token) (reflect.Val
 			return val1, true
 		}
 	default:
-		panic("Unexpected token in identity field.")
+		this.errorf(node, "Unexpected token in identity field.")
 	}
+	return reflect.Value{}, false
 }
 
 func (this *EvalJade) findIdentityValue(rval reflect.Value, identity *FuncToken, got bool) (reflect.Value, error) {
@@ -509,7 +546,8 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 			}
 		}
 		//Other Values
-		panic("Variable not resolved " + name)
+		err = fmt.Errorf("Variable not resolved %s", name)
+		return
 	}
 }
 
@@ -818,38 +856,6 @@ func basicKind(v reflect.Value) (kind, error) {
 		return stringKind, nil
 	}
 	return invalidKind, fmt.Errorf("invalid type for comparison of value %v", v.Kind())
-}
-
-// errorf formats the error and terminates processing.
-func (this *EvalJade) errorf(node *TreeNode, format string, args ...interface{}) {
-	err := ""
-	if this.currPart != nil {
-		err = fmt.Sprintf("Template %q ", this.currPart.Name)
-		if node != nil {
-			err += fmt.Sprintf("Linenumber %v ", LineNumber(string(this.currPart.File), node.Pos))
-		}
-	} else if this.currTemplate != nil {
-		err = fmt.Sprintf("Template %q ", this.currTemplate.Name)
-		if node != nil {
-			err += fmt.Sprintf("Linenumber %v ", LineNumber(string(this.currTemplate.File), node.Pos))
-		}
-	}
-	//	name := doublePercent(s.tmpl.Name())
-	//	if s.node == nil {
-	//		format = fmt.Sprintf("template: %s: %s", name, format)
-	//	} else {
-	//		location, context := s.tmpl.ErrorContext(s.node)
-	//		format = fmt.Sprintf("template: %s: executing %q at <%s>: %s", location, name, doublePercent(context), format)
-	//	}
-	panic(fmt.Errorf(err+format, args...))
-}
-
-func LineNumber(source string, pos int) int {
-	if pos < len(source) {
-		return 1 + strings.Count(source[:pos], "\n")
-	} else {
-		return 1 + strings.Count(source, "\n")
-	}
 }
 
 // validateType guarantees that the value is valid and assignable to the type.

@@ -7,12 +7,14 @@ import (
 	"reflect"
 )
 
+// Engine keeps configuration information and redirect calls to the jadeparser.
 type Engine struct {
 	ViewPath string
 	Beautify bool
 	extfunc  map[string]reflect.Value
 }
 
+// Creates a new instance of the jade instance struct.
 func New() *Engine {
 	gojade := new(Engine)
 	gojade.extfunc = make(map[string]reflect.Value)
@@ -29,6 +31,7 @@ func (this *Engine) RenderFile(filename string, data interface{}) *bytes.Buffer 
 	return buf
 }
 
+// REnderString Renders a jade string to html.
 func (this *Engine) RenderString(template string, data interface{}) *bytes.Buffer {
 	buf := new(bytes.Buffer)
 	eval := this.init(buf)
@@ -45,6 +48,7 @@ func (this *Engine) RenderFileW(wr io.Writer, template string, data interface{})
 	return nil
 }
 
+// RegisterFunction registers a function tobe called from your jade template.
 func (this *Engine) RegisterFunction(name string, fn interface{}) {
 	fnvalue := reflect.ValueOf(fn)
 	switch fnvalue.Kind() {
