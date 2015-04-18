@@ -1,7 +1,4 @@
-// GoJade Gin Example demonstrates how to integrate GoJade into Gin.
-// The ginRenderJade struct at the bottom of this file is used to link
-// GoJade into gin's HTML Renderer.
-// Gin https://gin-gonic.github.io/gin/
+// GoJade Standard Example demonstrates how to use gojade with go standard http.
 package main
 
 import (
@@ -9,10 +6,10 @@ import (
 	"net/http"
 )
 
-//create a global variable referencing GoJade
+// create a global variable referencing GoJade
 var jade *gojade.Engine
 
-//model, this struct is passed to the jade passed.
+// model, this struct is passed to the jade view.
 type pageModel struct {
 	Title    string
 	Name     string
