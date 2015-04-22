@@ -95,15 +95,15 @@ type FuncToken struct {
 	Arguments  []*TreeNode
 	Next       *FuncToken
 	IsIdentity bool
-	Index      string
+	Index      *TreeNode
 }
 
 func NewFuncToken(name string) *FuncToken {
-	return &FuncToken{EmptyToken{CatFunction, nil}, name, make([]*TreeNode, 0), nil, false, ""}
+	return &FuncToken{EmptyToken{CatFunction, nil}, name, make([]*TreeNode, 0), nil, false, nil}
 }
 
 func NewIdentityToken(name string) *FuncToken {
-	return &FuncToken{EmptyToken{CatFunction, nil}, name, make([]*TreeNode, 0), nil, true, ""}
+	return &FuncToken{EmptyToken{CatFunction, nil}, name, make([]*TreeNode, 0), nil, true, nil}
 }
 
 func (this *FuncToken) AddArgument(arg *TreeNode) {
@@ -125,7 +125,7 @@ func (this *FuncToken) String() string {
 			}
 			out += fmt.Sprintf("%s(%s)", chain.Name, args)
 		}
-		if chain.Index != "" {
+		if chain.Index != nil {
 			out += fmt.Sprintf("[%s]", chain.Index)
 		}
 		del = "."

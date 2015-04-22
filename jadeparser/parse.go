@@ -221,19 +221,13 @@ loop:
 			}
 		case '[':
 			this.ignore()
-			if len(chainedItem.Index) > 0 {
+			if chainedItem.Index != nil {
 				chainedItem.Next = NewIdentityToken("")
 				chainedItem = chainedItem.Next
 			}
-			if scan.ScanNumber() {
-				chainedItem.Index = scan.Commit()
-			} else if index := this.parseText(); len(index) > 0 {
-				chainedItem.Index = index
-			} else {
-				this.error("Invalid value in Index '[]' at variable %q", chainedItem.Name)
-			}
+			chainedItem.Index = this.parseExpression()
 			if scan.Next() != ']' {
-				this.error("Index '[]' not closed, expecting ']' found: %q", this.commit())
+				this.error("Expecting ']' index closing bracket.")
 				break loop
 			}
 			continue loop

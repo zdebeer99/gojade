@@ -109,26 +109,26 @@ func addNum(arg1 interface{}, arg2 ...interface{}) float64 {
 	return result
 }
 
-func subtract(arg1 interface{}, arg2 ...interface{}) float64 {
-	result := toReflectValue(arg1).Float()
+func subtract(arg1 float64, arg2 ...float64) float64 {
+	result := arg1
 	for i := 0; i < len(arg2); i++ {
-		result = result - toReflectValue(arg2[i]).Float()
+		result = result - arg2[i]
 	}
 	return result
 }
 
-func multiply(arg1 interface{}, arg2 ...interface{}) float64 {
-	result := toReflectValue(arg1).Float()
+func multiply(arg1 float64, arg2 ...float64) float64 {
+	result := arg1
 	for i := 0; i < len(arg2); i++ {
-		result = result * toReflectValue(arg2[i]).Float()
+		result = result * arg2[i]
 	}
 	return result
 }
 
-func divide(arg1 interface{}, arg2 ...interface{}) float64 {
-	result := toReflectValue(arg1).Float()
+func divide(arg1 float64, arg2 ...float64) float64 {
+	result := arg1
 	for i := 0; i < len(arg2); i++ {
-		result = result / toReflectValue(arg2[i]).Float()
+		result = result / arg2[i]
 	}
 	return result
 }

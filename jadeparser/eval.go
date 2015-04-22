@@ -424,9 +424,9 @@ func (this *EvalJade) getIdentityValue(node *TreeNode, token Token) (reflect.Val
 			this.errorf(node, "Expecting a Variable Name on %v", identity.Name)
 		}
 		if sval, ok := this.stack.GetOk(identity.Name); ok {
-			val1, err = this.findIdentityValue(sval, identity, true)
+			val1 = this.findIdentityValue(node, sval, identity, true)
 		} else {
-			val1, err = this.findIdentityValue(this.data, identity, false)
+			val1 = this.findIdentityValue(node, this.data, identity, false)
 		}
 		if err != nil {
 			switch err.(type) {
@@ -451,38 +451,42 @@ func (this *EvalJade) getIdentityValue(node *TreeNode, token Token) (reflect.Val
 	return reflect.Value{}, false
 }
 
-func (this *EvalJade) findIdentityValue(rval reflect.Value, identity *FuncToken, got bool) (reflect.Value, error) {
+func (this *EvalJade) findIdentityValue(node *TreeNode, rval reflect.Value, identity *FuncToken, got bool) reflect.Value {
 	var mval reflect.Value = rval
-	var err error
+	var err, err2 error
 	if !got && len(identity.Name) > 0 {
 		if identity.IsIdentity {
-			mval, err = this.getVariableValue(rval, identity.Name)
-			if err != nil {
-				return mval, err
-			}
+			mval, err2 = this.getVariableValue(rval, identity.Name)
 		} else {
 			//if the identity item is a function call the function.
 			meth := rval.MethodByName(identity.Name)
 			if meth.IsValid() {
-				mval, err = this.callFunc(meth, identity.Name, identity.Arguments)
-				return mval, err
+				mval, err2 = this.callFunc(meth, identity.Name, identity.Arguments)
+			} else {
+				this.errorf(node, "function %s not found on struct %v", identity.Name, rval.Kind())
 			}
-			return mval, fmt.Errorf("function %s not found on struct %v", identity.Name, rval.Kind())
 		}
 	}
-	if len(identity.Index) > 0 {
-		mval, err = this.getVariableValue(mval, identity.Index)
-		if err != nil {
-			return mval, err
+	if identity.Index != nil {
+		if err2 != nil {
+			//Only Raise the nil ref error, if another operation is done on this value.
+			this.errorf(node, err2.Error())
 		}
+		index := this.getText(identity.Index)
+		mval, err = this.getVariableValue(mval, index)
 	}
 	if identity.Next != nil {
-		mval, err = this.findIdentityValue(mval, identity.Next, false)
-		if err != nil {
-			return mval, err
+		if err2 != nil {
+			//Only Raise the nil ref error, if another operation is done on this value.
+			this.errorf(node, err2.Error())
 		}
+		mval = this.findIdentityValue(node, mval, identity.Next, false)
+		err = nil
 	}
-	return mval, err
+	if err != nil {
+		this.errorf(node, err.Error())
+	}
+	return mval
 }
 
 func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result reflect.Value, err error) {
@@ -502,7 +506,14 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 		result = toBasicReflectValue(result, name)
 		return
 	case reflect.Array, reflect.Slice:
-		result = rval.Index(getIdentityIndex(rval, name))
+		var index int64
+		index, err = strconv.ParseInt(name, 10, strconv.IntSize)
+		if err != nil {
+			result = newNilValue(name, "Invalid Index")
+			err = fmt.Errorf("Array %q index not of type int.", name)
+			return
+		}
+		result = rval.Index(int(index))
 		if !result.IsValid() {
 			result = newNilValue(name, "Invalid Index")
 			err = fmt.Errorf("Invalid Index %q on %s", name, rval)
@@ -549,14 +560,6 @@ func (this *EvalJade) getVariableValue(rval reflect.Value, name string) (result 
 		err = fmt.Errorf("Variable not resolved %s", name)
 		return
 	}
-}
-
-func getIdentityIndex(obj interface{}, index string) int {
-	i, err := strconv.ParseInt(index, 10, 32)
-	if err != nil {
-		panic("Failed to convert index '" + index + "' to a int. " + err.Error())
-	}
-	return int(i)
 }
 
 func (this *EvalJade) toCommonType(val1 reflect.Value) reflect.Value {
@@ -881,7 +884,7 @@ func (s *EvalJade) validateType(value reflect.Value, typ reflect.Type) (result r
 	if typ != nil && !value.Type().AssignableTo(typ) {
 		if value.Kind() == reflect.Interface && !value.IsNil() {
 			result = value.Elem()
-			if value.Type().AssignableTo(typ) {
+			if result.Type().AssignableTo(typ) {
 				return
 			}
 			// fallthrough

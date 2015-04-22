@@ -314,6 +314,7 @@ why not add one...</p></div>
 
 @jade Conditionals condition 4
 - var authorised = false
+- var user = {}
 #user
   if user.description
     h2 Description
@@ -794,7 +795,18 @@ p= ifnull(x,"x is nil")
 
 
 @jade
+- var fields=["name","age"]
+- var person = {name:"Ben",age:32}
+div
+  div= fields[1]
+  div= person.name
+  div= person["name"]
+  each item in fields
+    div= item
+    div= person[item]
+  div= fields[len(fields)-1]
 @html
+<div><div>age</div><div>Ben</div><div>Ben</div><div>name</div><div>Ben</div><div>age</div><div>32</div><div>age</div></div>
 @end
 
 

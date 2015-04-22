@@ -10,7 +10,8 @@ func TestRenderFiles(t *testing.T) {
 	jade := New()
 	t.Log("Render test.html")
 	jade.ViewPath = "res"
-	data := map[string]interface{}{"PageTitle": "Test Jade", "YouAreUsingJade": true, "Children": []string{"Mike", "Sue", "Helen"}}
+	data := map[string]interface{}{"PageTitle": "Test Jade", "YouAreUsingJade": true, "Children": []string{"Mike", "Sue", "Helen"},
+		"Person": map[string]interface{}{"Name": "Ben"}}
 	save("res/html/test.html", jade.RenderFile("test", data).Bytes())
 
 	//extends
