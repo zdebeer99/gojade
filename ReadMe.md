@@ -188,21 +188,25 @@ To assist with these scenarios gojade includes some built in functions and you c
 
 Built in Functions included is:
 
-* len(value)
+* len(value)  
   Get the length of an array or string.
 
-* upper(string)
+* upper(string)  
+  Change a string to uppercase
 
-* lower(string)
+* lower(string)  
+  Change a string to lower case
 
-* format(string,args...) - the same as fmt.SPrintf() in go
+* format(string,args...)  
+  The same as fmt.SPrintf() in go
 
-* isnull(value) bool
+* isnull(value) bool  
+  Check if a value is nil
 
-* ifnull(value, replace) - returns replace if value is nil else it returns value
+* ifnull(value, replace)  
+  Returns replace a value if the value is nil else it returns value
 
 * more is planned, suggestions is welcomed.
 
 
-
-golang jade go jade gojade
+Inspired by: jade, go templates, gojade, amber, and indirectly by slim, haml
