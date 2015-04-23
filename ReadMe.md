@@ -171,7 +171,7 @@ somestring.toUpperCase()
 someArray.length
 ```
 
-as go strings does not have functions linked to the struct. But this will work.
+in go strings does not have methods linked to the string. The Time type for example in go has methods map to it, show this will work.
 
 ```go
 type Model struct{
@@ -184,11 +184,12 @@ p The Current date is
 p= Time.Format("02 Jan 2006")
 ```
 
-to assist with these scenarios gojade includes some built in functions and you can register your own go functions.
+To assist with these scenarios gojade includes some built in functions and you can register your own go functions, any struct that has methods passed to the render function it's methods will also automatically be available in the Jade parser.
 
 Built in Functions included is:
 
 * len(value)
+  Get the length of an array or string.
 
 * upper(string)
 
