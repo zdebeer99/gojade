@@ -130,16 +130,16 @@ div#foo(data-bar="foo")&attributes(attributes)
 //*********************
 
 @jade Case
-- var friends = 10
-case friends
-  when 0
-    p you have no friends
-  when 1
-    p you have a friend
-  default
-    p you have #{friends} friends
+each friends in 3
+  case friends
+    when 0
+      p you have no friends
+    when 1
+      p you have a friend
+    default
+      p you have #{friends} friends
 @html
-<p>you have 10 friends</p>
+<p>you have no friends</p><p>you have a friend</p><p>you have 2 friends</p>
 @end
 
 //Case Fall Through
@@ -156,10 +156,9 @@ case friends
 <p>you have very few friends</p>
 @end
 
-//Block Expansion
-
+//Case Block Expansion
 @jade Case Block Expansion
-- var friends = 1
+-var friends = 1
 case friends
   when 0: p you have no friends
   when 1: p you have a friend
@@ -167,6 +166,7 @@ case friends
 @html
 <p>you have a friend</p>
 @end
+
 
 //*********************
 //Code
@@ -627,8 +627,10 @@ img
 
 @jade Block Expansion
 a: img
+//-The Next Tag is not strictly jade syntax, but it did create weird results in gojade, so I added this test to make sure it resolves correctly aswell.
+div:a(href="#") Home
 @html
-<a><img/></a>
+<a><img/></a><div><a href="#">Home</a></div>
 @end
 
 @jade Self Closing Tags
