@@ -383,7 +383,7 @@ func ObjToString(val interface{}) string {
 		for _, item := range val2 {
 			buf.WriteString(del)
 			buf.WriteString(ObjToString(item))
-			del = " "
+			del = ","
 		}
 		return buf.String()
 	case map[string]interface{}:
@@ -393,7 +393,7 @@ func ObjToString(val interface{}) string {
 			buf.WriteString(del)
 			buf.WriteString(key + ":")
 			buf.WriteString(ObjToString(value))
-			del = ";"
+			del = ","
 		}
 		return buf.String()
 	case *LinearMap:
@@ -403,7 +403,7 @@ func ObjToString(val interface{}) string {
 			buf.WriteString(del)
 			buf.WriteString(key + ":")
 			buf.WriteString(ObjToString(val2.Get(key)))
-			del = ";"
+			del = ","
 		}
 		return buf.String()
 	case float32:

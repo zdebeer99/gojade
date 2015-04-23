@@ -110,16 +110,16 @@ p= hello("Ben")
 ```
 methods defined on the model struct passed to the render function is also accessible from jade.
 
-**variable names**
+**Variables**
 
 * Variable names is case sensitive.
 
-* Only public fields can be accessed from a struct.
+* Only public fields and methods can be accessed from a struct passed to the render method.
 
-* If a variable is not defined a warning will be Logged and nil is returned.
+* nil will eval to an empty string or false in a condition.
 
-* nil will eval to false
-
+* calling a field or a method on a nil variable will throw an error.
+    Example: lets say the object person is null then "person.Name" will throw an error. but just "person" will return a empty string.
 
 **doctype**
 
@@ -166,10 +166,25 @@ Defining a variable using var
 
 because gojade does not support javascript, the following will not work.
 
+```javascript
 somestring.toUpperCase()
 someArray.length
+```
 
-to assist with these scenarios you can register your own go functions.
+as go strings does not have functions linked to the struct. But this will work.
+
+```go
+type Model struct{
+  Time time.Time
+}
+```
+
+```jade
+p The Current date is
+p= Time.Format("02 Jan 2006")
+```
+
+to assist with these scenarios gojade includes some built in functions and you can register your own go functions.
 
 Built in Functions included is:
 
