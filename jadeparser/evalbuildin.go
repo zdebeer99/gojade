@@ -2,6 +2,7 @@ package jadeparser
 
 import (
 	"bytes"
+	"fmt"
 )
 
 type operatorfunction struct {
@@ -169,6 +170,7 @@ func or(arg0 interface{}, args ...interface{}) bool {
 
 // eq evaluates the comparison a == b || a == c || ...
 func eq(arg1 interface{}, arg2 ...interface{}) (bool, error) {
+	fmt.Printf("EQ %v %T %v %T \n", arg1, arg1, arg2[0], arg2[0])
 	v1 := toReflectValue(arg1)
 	k1, err := basicKind(v1)
 	if err != nil {
@@ -185,32 +187,30 @@ func eq(arg1 interface{}, arg2 ...interface{}) (bool, error) {
 		}
 		truth := false
 		if k1 != k2 {
-			// Special case: Can compare integer values regardless of type's sign.
-			switch {
-			case k1 == intKind && k2 == uintKind:
-				truth = v1.Int() >= 0 && uint64(v1.Int()) == v2.Uint()
-			case k1 == uintKind && k2 == intKind:
-				truth = v2.Int() >= 0 && v1.Uint() == uint64(v2.Int())
-			default:
+			if isNumber(v1) && isNumber(v2) {
+				v2, err = convertTo(v2, v1.Type())
+				if err != nil {
+					return false, err
+				}
+			} else {
 				return false, errBadComparison
 			}
-		} else {
-			switch k1 {
-			case boolKind:
-				truth = v1.Bool() == v2.Bool()
-			case complexKind:
-				truth = v1.Complex() == v2.Complex()
-			case floatKind:
-				truth = v1.Float() == v2.Float()
-			case intKind:
-				truth = v1.Int() == v2.Int()
-			case stringKind:
-				truth = v1.String() == v2.String()
-			case uintKind:
-				truth = v1.Uint() == v2.Uint()
-			default:
-				panic("invalid kind")
-			}
+		}
+		switch k1 {
+		case boolKind:
+			truth = v1.Bool() == v2.Bool()
+		case complexKind:
+			truth = v1.Complex() == v2.Complex()
+		case floatKind:
+			truth = v1.Float() == v2.Float()
+		case intKind:
+			truth = v1.Int() == v2.Int()
+		case stringKind:
+			truth = v1.String() == v2.String()
+		case uintKind:
+			truth = v1.Uint() == v2.Uint()
+		default:
+			panic("invalid kind")
 		}
 		if truth {
 			return true, nil
@@ -240,30 +240,28 @@ func lt(arg1, arg2 interface{}) (bool, error) {
 	}
 	truth := false
 	if k1 != k2 {
-		// Special case: Can compare integer values regardless of type's sign.
-		switch {
-		case k1 == intKind && k2 == uintKind:
-			truth = v1.Int() < 0 || uint64(v1.Int()) < v2.Uint()
-		case k1 == uintKind && k2 == intKind:
-			truth = v2.Int() >= 0 && v1.Uint() < uint64(v2.Int())
-		default:
+		if isNumber(v1) && isNumber(v2) {
+			v2, err = convertTo(v2, v1.Type())
+			if err != nil {
+				return false, err
+			}
+		} else {
 			return false, errBadComparison
 		}
-	} else {
-		switch k1 {
-		case boolKind, complexKind:
-			return false, errBadComparisonType
-		case floatKind:
-			truth = v1.Float() < v2.Float()
-		case intKind:
-			truth = v1.Int() < v2.Int()
-		case stringKind:
-			truth = v1.String() < v2.String()
-		case uintKind:
-			truth = v1.Uint() < v2.Uint()
-		default:
-			panic("invalid kind")
-		}
+	}
+	switch k1 {
+	case boolKind, complexKind:
+		return false, errBadComparisonType
+	case floatKind:
+		truth = v1.Float() < v2.Float()
+	case intKind:
+		truth = v1.Int() < v2.Int()
+	case stringKind:
+		truth = v1.String() < v2.String()
+	case uintKind:
+		truth = v1.Uint() < v2.Uint()
+	default:
+		panic("invalid kind")
 	}
 	return truth, nil
 }

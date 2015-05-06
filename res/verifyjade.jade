@@ -811,6 +811,20 @@ div
 <div><div>age</div><div>Ben</div><div>Ben</div><div>name</div><div>Ben</div><div>age</div><div>32</div><div>age</div></div>
 @end
 
+@jade Issue #7
+- var x = [1,2]
+if len(x)==2
+  p equal
+else
+  p Error
+if len(x)<3
+  p smaller
+else
+  p Error  
+p= len(x)*2
+@html
+@end
+
 
 @jade
 @html

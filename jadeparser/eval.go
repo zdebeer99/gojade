@@ -1008,3 +1008,15 @@ func isNullValue(value reflect.Value) bool {
 		return false
 	}
 }
+
+func isNumber(value reflect.Value) bool {
+	switch value.Kind() {
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return true
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return true
+	case reflect.Float32, reflect.Float64:
+		return true
+	}
+	return false
+}
