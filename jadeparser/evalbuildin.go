@@ -65,10 +65,6 @@ func explodeAttributes(attr interface{}) string {
 	return buf.String()
 }
 
-func not(val bool) bool {
-	return !val
-}
-
 func addNumOrString(arg1 interface{}, arg2 ...interface{}) interface{} {
 	var result float64
 	buf := new(bytes.Buffer)
@@ -138,6 +134,10 @@ func divide(arg1 float64, arg2 ...float64) float64 {
 func truth(a interface{}) bool {
 	t, _ := isTrue(toReflectValue(a))
 	return t
+}
+
+func not(a interface{}) bool {
+	return !truth(a)
 }
 
 func and(arg0 interface{}, args ...interface{}) bool {
