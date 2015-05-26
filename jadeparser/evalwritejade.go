@@ -126,6 +126,7 @@ func (this *jadewriter) Group(node *TreeNode) {
 	case "()":
 		start = "("
 		end = ")"
+		del = " "
 	case "[]":
 		start = ""
 		end = ""
@@ -138,6 +139,11 @@ func (this *jadewriter) Group(node *TreeNode) {
 		end = ""
 		del = " "
 	}
+	this.GroupWriter(node, start, end, del)
+
+}
+
+func (this *jadewriter) GroupWriter(node *TreeNode, start, end, del string) {
 	this.write(start)
 	cnt := len(node.items)
 	for i, val1 := range node.items {
@@ -169,12 +175,39 @@ func (this *jadewriter) KeyValueAttribute(keyvalue *KeyValueToken) {
 	this.write(" ")
 	this.write(keyvalue.Key)
 	this.write("=\"")
-	if escape {
-		this.write(this.template.escapeHtml(valueNode))
-	} else {
-		this.writeValue(value)
+	switch strings.ToLower(keyvalue.Key) {
+	case "style":
+		this.styleAttribute(valueNode, escape)
+	case "class":
+		this.classAttribute(valueNode, escape)
+	default:
+		if escape {
+			this.write(this.template.escapeHtml(valueNode))
+		} else {
+			this.writeValue(value)
+		}
 	}
 	this.write("\"")
+}
+
+func (this *jadewriter) styleAttribute(valueNode *TreeNode, escape bool) {
+	del := ""
+	for _, val1 := range valueNode.items {
+		this.write(del)
+		switch val2 := val1.Value.(type) {
+		case *KeyValueToken:
+			this.write(val2.Key)
+			this.write(":")
+			this.router(val2.Value)
+		default:
+			panic("Expecting Key Value Pair in style attribute.")
+		}
+		del = ";"
+	}
+}
+
+func (this *jadewriter) classAttribute(node *TreeNode, escape bool) {
+	this.router(node)
 }
 
 //KeyValueToken write a key value token.

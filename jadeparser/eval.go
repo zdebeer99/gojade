@@ -383,7 +383,7 @@ func ObjToString(val interface{}) string {
 		for _, item := range val2 {
 			buf.WriteString(del)
 			buf.WriteString(ObjToString(item))
-			del = ","
+			del = " "
 		}
 		return buf.String()
 	case map[string]interface{}:

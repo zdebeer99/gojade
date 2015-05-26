@@ -1,9 +1,6 @@
 package jadeparser
 
-import (
-	"bytes"
-	"fmt"
-)
+import "bytes"
 
 type operatorfunction struct {
 	fnFloat func(float64, float64) float64
@@ -170,7 +167,6 @@ func or(arg0 interface{}, args ...interface{}) bool {
 
 // eq evaluates the comparison a == b || a == c || ...
 func eq(arg1 interface{}, arg2 ...interface{}) (bool, error) {
-	fmt.Printf("EQ %v %T %v %T \n", arg1, arg1, arg2[0], arg2[0])
 	v1 := toReflectValue(arg1)
 	k1, err := basicKind(v1)
 	if err != nil {
