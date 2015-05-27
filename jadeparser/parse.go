@@ -2,9 +2,10 @@ package jadeparser
 
 import (
 	"fmt"
-	"github.com/zdebeer99/gojade/scanner"
 	"strconv"
 	"strings"
+
+	"github.com/zdebeer99/gojade/scanner"
 )
 
 type stateFn func(*parser) stateFn
@@ -380,7 +381,9 @@ func (this *parser) parseNot() stateFn {
 		if this.scan.ScanWord() {
 			this.curr = this.newNode(NewGroupToken(""))
 			this.parseIdentity()
-			fnnot.AddArgument(this.curr)
+			if len(this.curr.items) > 0 {
+				fnnot.AddArgument(this.curr.items[0])
+			}
 			this.curr = node
 		}
 		return branchExpressionOperatorPart

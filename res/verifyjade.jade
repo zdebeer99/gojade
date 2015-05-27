@@ -827,6 +827,43 @@ p= len(x)*2
 @end
 
 
+@jade Null Test
+-var username = "Ben"
+if user
+  p Error. Variable User has a value
+else
+  p Correct. User == Null
+
+if !user
+  p Correct. (!user) User == Null
+else
+  p Error. Variable User has a value
+
+if username
+  p Correct. username == #{username}
+else
+  p Correct. User == Null
+
+if !username
+  p Error. (!username) username == Null
+else
+  p Correct. username == #{username}
+
+@html
+<p>Correct. User == Null</p><p>Correct. (!user) User == Null</p><p>Correct. username == Ben</p><p>Correct. username == Ben</p>
+@end
+
+@jade Not Expression Test
+-var username = "Ben"
+
+if !user and username
+  p Correct. (!user) User == Null and username == #{username}
+else 
+  p Error. 
+@html
+<p>Correct. (!user) User == Null and username == Ben</p>
+@end
+
 @jade
 @html
 @end
