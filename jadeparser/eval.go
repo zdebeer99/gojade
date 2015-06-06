@@ -298,6 +298,10 @@ func (this *EvalJade) jadeEach(node *TreeNode, fn *FuncToken) {
 	defer this.stack.DropLayer()
 
 	arrayValue := this.getValue(fn.Arguments[2])
+	this.iterValue(arrayValue, node, fn, index, ivalue)
+}
+
+func (this *EvalJade) iterValue(arrayValue reflect.Value, node *TreeNode, fn *FuncToken, index, ivalue string) {
 	if !arrayValue.IsValid() {
 		this.errorf(node, "value '%s' after 'each in' cannot be nil. ", fn.Arguments[2])
 	}
@@ -338,7 +342,8 @@ func (this *EvalJade) jadeEach(node *TreeNode, fn *FuncToken) {
 			}
 			return
 		}
-		this.errorf(node, "Invalid value type after 'in' keyword, expecting an array, map or number found %s", arrayValue.Kind())
+		this.iterValue(arrayValue.Elem(), node, fn, index, ivalue)
+		return
 	case reflect.Float64:
 		cnt := int(arrayValue.Float())
 		for i := 0; i < cnt; i++ {
