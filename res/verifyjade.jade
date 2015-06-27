@@ -870,6 +870,15 @@ p 1 + 2 = {{1 + 2}}
 <p>1 + 2 = {{1 + 2}}</p>
 @end
 
+@jade convert model to json
+p json dump
+p!= json(Person)
+scripts(type="text/text").
+  var model = #{json(Person)}
+@html
+<p>json dump</p><p>{"Name":"Ben","Age":32}</p><scripts type="text/text">var model = {"Name":"Ben","Age":32}</scripts>
+@end
+
 @jade
 @html
 @end
