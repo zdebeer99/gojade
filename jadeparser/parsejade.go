@@ -665,7 +665,7 @@ func (this *parser) getContent() *TreeNode {
 			inCode = true
 		}
 		r := this.scan.Next()
-		if r == '}' {
+		if r == '}' && inCode {
 			expr := this.parseExpressionFrom(code.String())
 			if expr != nil {
 				if escape {
