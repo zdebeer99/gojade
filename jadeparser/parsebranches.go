@@ -138,7 +138,7 @@ func branchStartStatement(this *parser) stateFn {
 		this.curr.Value = NewEmptyToken()
 		return branchCode
 	}
-	if scan.ScanWord() {
+	if scan.ScanHtmlWord() {
 		return this.parseHtmlTag()
 	}
 	return branchAfterHtmlTag(this)

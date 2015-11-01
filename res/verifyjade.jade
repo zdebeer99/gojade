@@ -640,6 +640,13 @@ foo(bar='baz')/
 <foo/><foo bar="baz"/>
 @end
 
+@jade Custom Tags
+zf-model(overlay=true)
+  div This is a modal window.
+@html
+<zf-model overlay="overlay"><div>This is a modal window.</div></zf-model>
+@end
+
 //*********************
 //Custom Tests
 //*********************
